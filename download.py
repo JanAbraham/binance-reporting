@@ -48,7 +48,7 @@ def download_balances(
     writetype: str,  # 'a' or 'w'
     ):
     """download balances from exchange and write it into a csv file
-
+    
     Arguments:
     - account_name -- Is used in the log file for easier debugging.
     - PUBLIC -- public part of API key to open connection to exchange
