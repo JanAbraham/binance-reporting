@@ -1,4 +1,24 @@
 def API_weight_check(client):
+    """Get current asset balance.
+
+    :param asset: required
+    :type asset: str
+    :param recvWindow: the number of milliseconds the request is valid for
+    :type recvWindow: int
+
+    :returns: dictionary or None if not found
+
+    .. code-block:: python
+
+        {
+            "asset": "BTC",
+            "free": "4723846.89208129",
+            "locked": "0.00000000"
+        }
+
+    :raises: BinanceRequestException, BinanceAPIException
+
+    """
     """verify current payload of Binance API and trigger cool-off
 
     if 85% of max payload has been reached
