@@ -14,12 +14,12 @@ TODO remove all df.empty queries
 TODO add docstrings to each function
 TODO add configuration file
 TODO add funtion to merge info of different accounts into one file for 
-        better reporting with excel pivot tables
+better reporting with excel pivot tables
 TODO standardize column names accross different files
-        (e.g. insertTime vs. updateTime vs. updatetime or 
-        asset vs. coin)
+(e.g. insertTime vs. updateTime vs. updatetime or 
+asset vs. coin)
 TODO add an addresslist-translation-file to translate cryptic address names into 
-        human readable names and use it for deposits & withdrawals
+human readable names and use it for deposits & withdrawals
 """
 import os  # set home directory of current user depending on OS
 import time

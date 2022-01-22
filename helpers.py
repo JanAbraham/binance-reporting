@@ -1,14 +1,14 @@
 def API_weight_check(client):
-    #
-    # verify current payload of Binance API and trigger cool-off
-    # if 85% of max payload has been reached
-    # sends as well a keepalive signal for the api connection
-    # Goal: avoid errors while downloading data from binance
-    # Return: the payload value after checking & cool-off
-    # TODO: read current max value for Payload from Binance config
-    # TODO: SAPI API seems to have threshold of 12000 => incorporate those (discovered during snapshot downloads)
-    import time  # used for sleep / cool-off
+    """verify current payload of Binance API and trigger cool-off
 
+    if 85% of max payload has been reached
+    sends as well a keepalive signal for the api connection
+    Goal: avoid errors while downloading data from binance
+    Return: the payload value after checking & cool-off
+    TODO: read current max value for Payload from Binance config
+    TODO: SAPI API seems to have threshold of 12000 => incorporate those (discovered during snapshot downloads)
+    import time  # used for sleep / cool-off
+    """
     logging.debug("check payload of API")
     # customizable variables
     api_payload_threshold = 0.75  # Threshold is max 75%
@@ -63,10 +63,11 @@ def API_weight_check(client):
 
 
 def API_close_connection(client):
-    #
-    # close API connection of a given client
-    # to keep the environment lean and clean
-    # TODO add different connection types for futures etc.
+    """close API connection of a given client
+
+    to keep the environment lean and clean
+    TODO add different connection types for futures etc.
+    """
 
     logging.debug("closing API connection")
     try:
@@ -77,11 +78,10 @@ def API_close_connection(client):
 
 
 def file_remove_blanks(filename):
-    #
-    # read csv file and remove blank lines
-    # those blank lines are sometimes created when saving
-    # csv files under windows
-    #
+    """read csv file and remove blank lines
+    those blank lines are sometimes created when saving
+    csv files under windows
+    """
     logging.info("removing blank rows from " + filename)
     data = pd.read_csv(filename, skip_blank_lines=True, low_memory=False)
     data.dropna(how="all", inplace=True)

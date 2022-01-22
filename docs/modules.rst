@@ -1,7 +1,8 @@
-src
-===
+python-binance-reporting
+========================
 
 .. toctree::
    :maxdepth: 4
 
-   binance_reporting
+   download
+   helpers
