@@ -48,26 +48,24 @@ def download_balances(
     writetype: str,  # 'a' or 'w'
     ):
     """download balances from exchange and write it into a csv file
-    
+
     Arguments:
     - account_name -- Is used in the log file for easier debugging.
     - PUBLIC -- public part of API key to open connection to exchange
     - SECRET -- secret part of API key to open connection to exchange
-    - balances_file -- name and location of the csv file
-        to be filled with balances info
-    - bal_fut_positions_file -- name and location of the csv file
-        to be filled with future positions info
-    - bal_fut_assets_file -- name and location of the csv file
-        to be filled with futures assets info
-    - writetype -- indicates if balances should be added ('a')
-        or a new file should be written ('w')
+    - balances_file -- name and location of the csv file to be filled with balances info
+    - bal_fut_positions_file -- name and location of the csv file to be filled with future positions info
+    - bal_fut_assets_file -- name and location of the csv file to be filled with futures assets info
+    - writetype -- indicates if balances should be added ('a') or a new file should be written ('w')
+    
     Returns:
     - writes csv file with balances of the binance account
-    - the USD value of free & locked assets, cash available
-        and the overall portfolio value
+    - the USD value of free & locked assets, cash available and the overall portfolio value
+    
     TODO add 'account_name' and 'account_type' into csv files
     TODO downloading balances of future accounts
     """
+
     logging.info("Start downloading balances for Account: " + account_name)
     logging.debug("connecting to binance ...")
 
@@ -741,9 +739,9 @@ def download_deposits(account_name, account_type, PUBLIC, SECRET, deposits_file)
 
     For every transaction, following data is being added to the downloadable
     data from the exchange:
-        - USDT price of the asset (close price from the day of transaction)
-        - overall value of coins in USDT from the day of the transaction
-        - time of transaction in UTC format
+    - USDT price of the asset (close price from the day of transaction)
+    - overall value of coins in USDT from the day of the transaction
+    - time of transaction in UTC format
 
     In case of the price of the coin is not available anymore,
     '0' value is being filled in.
@@ -865,9 +863,9 @@ def download_withdrawals(account_name, account_type, PUBLIC, SECRET, withdrawals
 
     For every transaction, following data is being added to the downloadable
     data from the exchange:
-        - USDT price of the asset (close price from the day of transaction)
-        - overall value of coins in USDT from the day of the transaction
-        - time of transaction in UTC format
+    - USDT price of the asset (close price from the day of transaction)
+    - overall value of coins in USDT from the day of the transaction
+    - time of transaction in UTC format
 
     In case of the price of the coin is not available anymore,
     '0' value is being filled in.
