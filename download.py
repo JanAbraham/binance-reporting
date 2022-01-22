@@ -1,42 +1,3 @@
-"""Different functions for downloading and saving data from exchange.
-
-functions available for:
-    - history of trades
-    - history of orders
-    - open orders
-    - deposits
-    - withdrawals
-    - daily snapshots
-
-if it is called directly, it will download all mentioned above
-TODO re-work withdrawals equal to deposits
-TODO remove all df.empty queries
-TODO add docstrings to each function
-TODO add configuration file
-TODO add funtion to merge info of different accounts into one file for 
-better reporting with excel pivot tables
-TODO standardize column names accross different files
-(e.g. insertTime vs. updateTime vs. updatetime or 
-asset vs. coin)
-TODO add an addresslist-translation-file to translate cryptic address names into 
-human readable names and use it for deposits & withdrawals
-"""
-import os  # set home directory of current user depending on OS
-import time
-import logging
-import pandas as pd
-from binance.client import Client
-
-logfile = "binance-reporting.log"
-loglevel = "INFO"  #'INFO', 'DEBUG'
-logging.basicConfig(
-    level=loglevel,
-    filename=logfile,
-    format="%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:\
-    %(funcName)s:%(message)s",
-)
-
-
 def download_balances(
     account_name: str,  # used to differentiate info in debug log
     account_type: str,
@@ -1251,6 +1212,44 @@ def download_all():
             sourcefiles.append(filename)
     merge_files(sourcefiles, targetfile)
     logging.info("Merging snapshot files finished!")
+
+"""Different functions for downloading and saving data from exchange.
+
+functions available for:
+    - history of trades
+    - history of orders
+    - open orders
+    - deposits
+    - withdrawals
+    - daily snapshots
+
+if it is called directly, it will download all mentioned above
+TODO re-work withdrawals equal to deposits
+TODO remove all df.empty queries
+TODO add docstrings to each function
+TODO add configuration file
+TODO add funtion to merge info of different accounts into one file for 
+better reporting with excel pivot tables
+TODO standardize column names accross different files
+(e.g. insertTime vs. updateTime vs. updatetime or 
+asset vs. coin)
+TODO add an addresslist-translation-file to translate cryptic address names into 
+human readable names and use it for deposits & withdrawals
+"""
+import os  # set home directory of current user depending on OS
+import time
+import logging
+import pandas as pd
+from binance.client import Client
+
+logfile = "binance-reporting.log"
+loglevel = "INFO"  #'INFO', 'DEBUG'
+logging.basicConfig(
+    level=loglevel,
+    filename=logfile,
+    format="%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:\
+    %(funcName)s:%(message)s",
+)
 
 if __name__ == "__main__":
     download_all()
