@@ -1,4 +1,4 @@
-def firstfunction()
+def firstfunction():
     """Different functions for downloading and saving data from exchange.
 
     functions available for:
