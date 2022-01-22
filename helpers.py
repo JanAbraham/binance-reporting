@@ -76,7 +76,7 @@ def API_close_connection(client):
     """close API connection of a given client
 
     Goal:
-    Avoide having left-over connections to the API to keep the environment neat and clean.
+        - Avoide having left-over connections to the API to keep the environment neat and clean.
 
     Procedure:
         - get listen key of client and close stream
@@ -101,8 +101,7 @@ def file_remove_blanks(filename):
     """read csv file and remove blank lines
     
     Goal:
-        - Sometimes there are blank lines added to csv files when
-    writing them in Windows.
+        - Sometimes there are blank lines added to csv files when writing them in Windows.
 
     Procedure:
         - load provided file into panda dataframe
