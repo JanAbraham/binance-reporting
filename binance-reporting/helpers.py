@@ -1,10 +1,22 @@
+import time  # used for sleep / cool-off
+import logging
+
+logfile = "binance-reporting.log"
+loglevel = "INFO"  #'INFO', 'DEBUG'
+logging.basicConfig(
+    level=loglevel,
+    filename=logfile,
+    format="%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:\
+    %(funcName)s:%(message)s",
+    )
+
 def API_weight_check(client):
     """verify current payload of Binance API and trigger cool-off
 
-    Goal:
+    **Goal
         - Avoiding errors while downloading data from binance.
 
-    Procedure:
+    **Procedure
         - check what the current payload is
         - if 85% of max payload has been reached, cool-off is initiated
         - send a keepalive signal for the api connection
@@ -17,7 +29,6 @@ def API_weight_check(client):
     :TODO: read current max value for Payload from Binance config
     :TODO: SAPI API seems to have threshold of 12000 => incorporate those (discovered during snapshot downloads)
     """
-    import time  # used for sleep / cool-off
 
     logging.debug("check payload of API")
     # customizable variables
@@ -63,7 +74,7 @@ def API_weight_check(client):
                     api_header_used = api_header
             logging.debug("api_header used after keep alive ping: " + api_header_used)
         except Exception as e:
-            logging.warning("Error: " + str(e.code) + " (" + e.message + ")")
+            logging.warning("Error: " + str(e))
 
     logging.debug(
         "Check payload of API finished. Current Payload is "
@@ -75,10 +86,10 @@ def API_weight_check(client):
 def API_close_connection(client):
     """close API connection of a given client
 
-    Goal:
-        - Avoide having left-over connections to the API to keep the environment neat and clean.
+    **Goal
+        - Avoid having left-over connections to the API to keep the environment neat and clean.
 
-    Procedure:
+    **Procedure
         - get listen key of client and close stream
 
     :param client: required
@@ -100,10 +111,10 @@ def API_close_connection(client):
 def file_remove_blanks(filename):
     """read csv file and remove blank lines
     
-    Goal:
+    **Goal
         - Sometimes there are blank lines added to csv files when writing them in Windows.
 
-    Procedure:
+    **Procedure
         - load provided file into panda dataframe
         - dropping all empty rows from the dataframe
         - writing file back

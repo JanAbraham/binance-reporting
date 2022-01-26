@@ -1,0 +1,14 @@
+modules:
+  # mandatory
+  # provides the modules to be run
+  # 'yes' means this module will run, 'no' means it wont
+  # please dont remove any of the lines
+  download_balances: yes
+  download_daily_account_snapshots: no
+  download_trades: no
+  download_orders: no
+  download_open_orders: no
+  download_deposits: no
+  download_withdrawals: no
+  balance_ticker: no
+  download_prices: no

@@ -1,42 +1,46 @@
-def firstfunction():
-    """Different functions for downloading and saving data from exchange.
+"""Different functions for downloading and saving data from exchange.
 
-    functions available for:
-        - history of trades
-        - history of orders
-        - open orders
-        - deposits
-        - withdrawals
-        - daily snapshots
+functions available for:
+    - history of trades
+    - history of orders
+    - open orders
+    - deposits
+    - withdrawals
+    - daily snapshots
+    - send balances to telegram channel
 
-    if it is called directly, it will download all mentioned above
-    TODO re-work withdrawals equal to deposits
-    TODO remove all df.empty queries
-    TODO add docstrings to each function
-    TODO add configuration file
-    TODO add funtion to merge info of different accounts into one file for 
-    better reporting with excel pivot tables
-    TODO standardize column names accross different files
-    (e.g. insertTime vs. updateTime vs. updatetime or 
-    asset vs. coin)
-    TODO add an addresslist-translation-file to translate cryptic address names into 
-    human readable names and use it for deposits & withdrawals
-    """
-    import os  # set home directory of current user depending on OS
-    import time
-    import logging
-    import pandas as pd
-    from binance.client import Client
+if it is called directly, it will download all mentioned above
+TODO re-work withdrawals equal to deposits
+TODO remove all df.empty queries
+TODO add docstrings to each function
+TODO add funtion to merge info of different accounts into one file for 
+better reporting with excel pivot tables
+TODO standardize column names accross different files
+(e.g. insertTime vs. updateTime vs. updatetime or 
+asset vs. coin)
+TODO add an addresslist-translation-file to translate cryptic address names into 
+human readable names and use it for deposits & withdrawals
+"""
 
-    logfile = "binance-reporting.log"
-    loglevel = "INFO"  #'INFO', 'DEBUG'
-    logging.basicConfig(
-        level=loglevel,
-        filename=logfile,
-        format="%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:\
-        %(funcName)s:%(message)s",
-    )
+import os               # set home directory of current user depending on OS
+import sys              # get arguments from calling the script
+import time
+import pandas as pd
+from binance.client import Client
+import helpers as hlp
+import logging
+import telegram.ext     # sending balance information
 
+logging.info("Binance-Download: Loading config.")
+# for module execution via command line
+config_dir = '../' 
+config_file_default = 'config_default.yaml'
+
+#for debugging, config_dir = ''
+if not os.path.isfile(config_dir + config_file_default):
+    config_dir = ''
+
+config = hlp.read_config(config_dir, config_file_default, sys.argv)
 
 def download_balances(
     account_name: str,  # used to differentiate info in debug log
@@ -67,13 +71,13 @@ def download_balances(
     TODO downloading balances of future accounts
     """
 
-    logging.info("Start downloading balances for Account: " + account_name)
+    logging.info("Start downloading balances for Account: " + account_name + "/" + account_type)
     logging.debug("connecting to binance ...")
 
     client = Client(api_key=PUBLIC, api_secret=SECRET)
 
     logging.debug("reading balances and prices from exchnge ...")
-    API_weight_check(client)
+    hlp.API_weight_check(client)
     fut_pos = pd.DataFrame()
     fut_assets = pd.DataFrame()
     prices = pd.DataFrame(client.get_all_tickers())
@@ -81,7 +85,7 @@ def download_balances(
         balances = pd.DataFrame()
         logging.debug('reading values for portval')
         accountinfo_fut = client.futures_account()
-        API_close_connection(client)
+        hlp.API_close_connection(client)
         portval = {
             "asset": "PortVal",
             'totalInitialMargin' : accountinfo_fut['totalInitialMargin'],
@@ -99,8 +103,6 @@ def download_balances(
             'UTCtime' : pd.to_datetime("now")
         }
         balances = balances.append(portval, ignore_index=True)
-        balances['Account'] = account_name
-        balances['Acccount type'] = account_type
     
         logging.debug("collecting future account positions and assets")
         fut_pos = pd.DataFrame(accountinfo_fut['positions'])
@@ -109,8 +111,8 @@ def download_balances(
         for symbol in fut_pos["symbol"]:
             fut_pos["USDT price"].loc[fut_pos.symbol == symbol] = (prices["price"].loc[prices.symbol == symbol].iloc[0])
             fut_pos['UTCtime'] = pd.to_datetime(fut_pos["updateTime"], unit='ms')
-        fut_pos['Account'] = account_name
-        fut_pos['Acccount type'] = account_type
+        fut_pos['account'] = account_name
+        fut_pos['type'] = account_type
         logging.debug("collecting future account assets")
 
         fut_assets = pd.DataFrame(accountinfo_fut['assets'])
@@ -132,8 +134,8 @@ def download_balances(
         fut_assets = fut_assets.append(portval, ignore_index=True)
 
         fut_assets['UTCtime'] = pd.to_datetime("now")
-        fut_assets['Account'] = account_name
-        fut_assets['Acccount type'] = account_type
+        fut_assets['account'] = account_name
+        fut_assets['type'] = account_type
 
         logging.debug("collect return values of function")
         result = {
@@ -148,10 +150,9 @@ def download_balances(
         fut_pos.to_csv(bal_fut_positions_file, index=False)
         fut_assets.to_csv(bal_fut_assets_file, index=False)
 
-
     if account_type == 'SPOT':
         accountinfo = client.get_account()
-        API_close_connection(client)
+        hlp.API_close_connection(client)
         logging.debug("reducing lists of balances and prices to the minimum ...")
         balances = pd.DataFrame(accountinfo["balances"])
         balances[["free", "locked"]] = balances[["free", "locked"]].apply(pd.to_numeric)
@@ -196,6 +197,9 @@ def download_balances(
             "portval": portval["Asset value"],
         }
 
+    balances['account'] = account_name
+    balances['type'] = account_type
+    
     logging.debug("write balances to " + balances_file)
     if writetype == "a":
         balances.to_csv(balances_file, index=False, header=False, mode=writetype)
@@ -295,7 +299,7 @@ def download_daily_account_snapshots(
             + " to "
             + str(pd.to_datetime(start_time_ms + step_ms, unit='ms'))
         )
-        API_weight_check(client)
+        hlp.API_weight_check(client)
         try:
             new_snapshot = pd.DataFrame(client.get_account_snapshot(
                     type=account_type,
@@ -308,7 +312,7 @@ def download_daily_account_snapshots(
         snapshots = snapshots.append(new_snapshot, ignore_index=True)
         start_time_ms = start_time_ms + step_ms + 1
 
-    API_close_connection(client)
+    hlp.API_close_connection(client)
 
     logging.debug("writing snapshots to csv ...")
 
@@ -350,7 +354,7 @@ def download_daily_account_snapshots(
                     "downloading historic prices for "
                     + symbol
                     + ". API payload: "
-                    + str(API_weight_check(client))
+                    + str(hlp.API_weight_check(client))
                 )
                 if not kline.empty:
                     balance["USDT price"].loc[balance["USDT symbol"] == symbol] = float(
@@ -431,7 +435,7 @@ def download_daily_account_snapshots(
                         "downloading historic prices for "
                         + asset
                         + ". API payload: "
-                        + str(API_weight_check(client))
+                        + str(hlp.API_weight_check(client))
                     )
                     kline = pd.DataFrame(
                         client.get_historical_klines(
@@ -514,8 +518,6 @@ def download_daily_account_snapshots(
     balances.sort_values(by=['updateTime'], ascending=False, inplace=True)
     balances.to_csv(snapshots_balances_file, index=False, date_format="%d/%m/%Y")
 
-
-
     logging.info("Finished writing daily snapshots for account: " + account_name)
 
 
@@ -548,7 +550,7 @@ def download_trades(
         logging.debug(
             "reading trades from Binance for Trading Pair " + trading_pair + "..."
         )
-        API_weight_check(client)
+        hlp.API_weight_check(client)
         # find out last recorded trade for this trading pair
         if trades.empty:
             last_rec_trade_time = 0
@@ -580,16 +582,15 @@ def download_trades(
             )
             logging.debug("  ... be gentle with the API and wait for 1sec")
             time.sleep(1)
-        except Exception as e:
-            logging.warning("Error: " + str(e.code) + " (" + e.message + ")")
-            logging.warning(
-                "Error with loading data for " + trading_pair + ". Trying next symbol."
-            )
+        except:
+            logging.warning("API error. Trying again")
+            continue
+
 
     logging.debug(
         "Amount of new Trading Records to be written: " + str(len(new_trades))
     )
-    API_close_connection(client)
+    hlp.API_close_connection(client)
 
     # only write trades into csv file if there have been new trades found
     if not len(new_trades) == 0:
@@ -638,7 +639,7 @@ def download_orders(
         logging.debug(
             "reading orders from Binance for Trading Pair " + trading_pair + "..."
         )
-        API_weight_check(client)
+        hlp.API_weight_check(client)
         # find out last recorded order for this trading pair
         if orders.empty:
             last_rec_order_time = 0
@@ -671,14 +672,12 @@ def download_orders(
             )
             logging.debug("  ... be gentle with the API and wait for 1sec")
             time.sleep(1)
-        except Exception as e:
-            logging.warning("Error: " + str(e.code) + " (" + e.message + ")")
-            logging.warning(
-                "Error with loading data for " + trading_pair + ". Trying next symbol."
-            )
+        except:
+            logging.warning("API error. Trying again")
+            continue
 
     logging.debug("Amount of new Order Records to be written: " + str(len(new_orders)))
-    API_close_connection(client)
+    hlp.API_close_connection(client)
 
     # only write orders into csv file if there have been new orders found
     if not len(new_orders) == 0:
@@ -713,7 +712,7 @@ def download_open_orders(account_name, account_type, PUBLIC, SECRET, open_orders
         return result
         
     client = Client(api_key=PUBLIC, api_secret=SECRET)
-    API_weight_check(client)
+    hlp.API_weight_check(client)
 
     logging.debug("reading all open orders from Binance ...")
     open_orders = pd.DataFrame(client.get_open_orders())
@@ -723,7 +722,7 @@ def download_open_orders(account_name, account_type, PUBLIC, SECRET, open_orders
         open_orders["UTCTime"] = pd.to_datetime(open_orders["time"], unit="ms")
         # sorting open orders for time descending
 
-    API_close_connection(client)
+    hlp.API_close_connection(client)
     logging.debug("writing open orders to csv ...")
     open_orders.to_csv(open_orders_file, index=False)
     logging.info("finished writing open orders to csv for account: " + account_name)
@@ -764,7 +763,7 @@ def download_deposits(account_name, account_type, PUBLIC, SECRET, deposits_file)
     logging.info("Start downloading deposits for account: " + account_name)
 
     # customizable variables
-    start_time_ms = 1498870800000  # 1.July 2021 GMT; binance exchange went online for public trading on 12.07.2017
+    start_time_ms = 1498870800000  # 1.July 2017 GMT; binance exchange went online for public trading on 12.07.2017
 
     # internal variables
     step_ms = 7776000000  # = 90 days; Binance does only allow to get deposit and withdraw data for 90 days timeframe
@@ -789,7 +788,7 @@ def download_deposits(account_name, account_type, PUBLIC, SECRET, deposits_file)
 
     deposits_new = pd.DataFrame()
     while start_time_ms < current_time_ms:
-        API_weight_check(client)
+        hlp.API_weight_check(client)
         deposits_new = deposits_new.append(
             pd.DataFrame(
                 client.get_deposit_history(
@@ -821,7 +820,7 @@ def download_deposits(account_name, account_type, PUBLIC, SECRET, deposits_file)
                 "downloading historic prices for "
                 + symbol
                 + ". API payload: "
-                + str(API_weight_check(client))
+                + str(hlp.API_weight_check(client))
             )
             kline = pd.DataFrame(
                 client.get_historical_klines(
@@ -832,7 +831,7 @@ def download_deposits(account_name, account_type, PUBLIC, SECRET, deposits_file)
                 (deposits_new.insertTime == updatetime_ms)
                 & (deposits_new["USDT symbol"] == symbol)
             ] = float(kline[4][0])
-        API_close_connection(client)
+        hlp.API_close_connection(client)
 
         deposits_new.drop(["USDT symbol"], inplace=True, axis=1)
         deposits = deposits.append(deposits_new, ignore_index=True)
@@ -913,7 +912,7 @@ def download_withdrawals(account_name, account_type, PUBLIC, SECRET, withdrawals
 
     transactions_new = pd.DataFrame()
     while start_time_ms < current_time_ms:
-        API_weight_check(client)
+        hlp.API_weight_check(client)
         transactions_new = transactions_new.append(
             pd.DataFrame(
                 client.get_withdraw_history(
@@ -953,7 +952,7 @@ def download_withdrawals(account_name, account_type, PUBLIC, SECRET, withdrawals
                 "downloading historic prices for "
                 + symbol
                 + ". API payload: "
-                + str(API_weight_check(client))
+                + str(hlp.API_weight_check(client))
             )
             kline = pd.DataFrame(
                 client.get_historical_klines(
@@ -962,7 +961,7 @@ def download_withdrawals(account_name, account_type, PUBLIC, SECRET, withdrawals
             )
             transactions_new["USDT price"][ind] = float(kline[4][0])
             # transactions_new['USDT price'].loc[(transactions_new.insertTime == updatetime_ms) & (transactions_new['USDT symbol'] == symbol)] = float(kline[4][0])
-        API_close_connection(client)
+        hlp.API_close_connection(client)
 
         transactions_new.drop(["USDT symbol"], inplace=True, axis=1)
         transactions = transactions.append(transactions_new, ignore_index=True)
@@ -992,6 +991,71 @@ def download_withdrawals(account_name, account_type, PUBLIC, SECRET, withdrawals
     return transactions
 
 
+def balance_ticker(accounts, account_groups, home_dir, telegram_token):
+    """ sending short balance status msg to telegram
+    """
+
+    logging.info('Sending balance tickers to telegram channels.')
+    for account in accounts:
+
+        account_details = accounts[account]
+        PUBLIC = os.environ.get(account_details['osvar_api_public'])
+        SECRET = os.environ.get(account_details['osvar_api_secret'])
+
+        file_directory = home_dir + '/dropbox/finance/binance/source data/Balances/'
+        balances_file = file_directory + 'balances_' + account + '.csv'
+        balances_file_all = file_directory + 'balances_all.csv'
+        
+        balances_file = file_directory + "balances_" + account + ".csv"
+        bal_fut_positions_file = file_directory + "balances_" + account + "_positions.csv"
+        bal_fut_assets_file = file_directory + "balances_" + account + "_" + account_details['type'] + "_assets.csv"
+
+        writetype = 'a'
+
+        balance = download_balances(account, account_details['type'], PUBLIC, SECRET, balances_file, bal_fut_positions_file, bal_fut_assets_file, writetype)
+
+        account_details['cash'] = round(balance['cash'], 1)
+        account_details['portval'] = round(balance['portval'], 1)
+        account_details['profit'] = round((balance['portval'] - account_details['investment']) / account_details['investment']*100, 2)
+
+        strCash = 'C=' + str(account_details['cash'])
+        strPortVal = 'B=' + str(account_details['portval'])
+        strProfit = 'P=' + str(account_details['profit']) + '%'
+
+        bot = telegram.Bot(token = telegram_token)
+        bot_text = (strCash + ' ' + strPortVal + ' ' + strProfit + ' ' + account_details['chat_pseudo']).lower()
+        bot.send_message(chat_id = account_details['chat_id'], text = bot_text)
+
+    logging.info('Finished writing ticker for all listed accounts!')
+
+
+    logging.info('Looping through different account groups and sending ticker messages to telegram for every group')
+
+    for account_group in account_groups:
+        account_group = account_groups[account_group]
+        chat_id = account_group['chat_id']
+        chat_pseudo = account_group['chat_pseudo']
+        investment = 0
+        cash = 0
+        portval = 0
+
+        # get details for every account and sum them up
+        for account in account_group['accounts']:
+            account_details = accounts[account]
+            investment = investment + account_details['investment']
+            cash = cash + account_details['cash']
+            portval = portval + account_details['portval']
+
+        strCash = 'C=' + str(round(cash, 0))
+        strPortVal = 'B=' + str(round(portval, 0))
+        strProfit = 'P=' + str(round((portval - investment) / investment * 100, 1)) + '%'
+
+        bot_text = (strCash + ' ' + strPortVal + ' ' + strProfit + ' ' + chat_pseudo).lower()
+        bot.send_message(chat_id = chat_id, text = bot_text)
+
+    print('Finished sending Tickers')
+
+
 def download_prices(prices_file):
     #
     # read prices for all trading pairs and write them to prices.csv file
@@ -1008,111 +1072,11 @@ def download_prices(prices_file):
     logging.info("Finished writing Prices!")
 
 
-def API_weight_check(client):
-    #
-    # verify current payload of Binance API and trigger cool-off
-    # if 85% of max payload has been reached
-    # sends as well a keepalive signal for the api connection
-    # Goal: avoid errors while downloading data from binance
-    # Return: the payload value after checking & cool-off
-    # TODO: read current max value for Payload from Binance config
-    # TODO: SAPI API seems to have threshold of 12000 => incorporate those (discovered during snapshot downloads)
-    import time  # used for sleep / cool-off
-
-    logging.debug("check payload of API")
-    # customizable variables
-    api_payload_threshold = 0.75  # Threshold is max 75%
-    api_payload_limit = {
-        "x-mbx-used-weight": 1200 * api_payload_threshold,
-        "x-mbx-used-weight-1m": 1200 * api_payload_threshold,
-        "X-SAPI-USED-IP-WEIGHT-1M": 12000 * api_payload_threshold,
-    }
-
-    # internal variables
-    int_loop_counter = 0
-    api_header_used = ""
-
-    # find out which of the headers is used in the API calls
-    for api_header in api_payload_limit:
-        if api_header in client.response.headers:
-            api_header_used = api_header
-
-    # loop as long as api payload is above threshold
-    while (
-        int(client.response.headers[api_header_used])
-        > api_payload_limit[api_header_used]
-    ):
-        int_loop_counter = int_loop_counter + 1
-        logging.warning(
-            "API overused! Waiting "
-            + str(int_loop_counter)
-            + "min for API to cool-off."
-        )
-        logging.debug("Payload = " + str(client.response.headers[api_header_used]))
-        time.sleep(int_loop_counter * 60)
-        # make sure the api connection stays alive during the cool-off period
-        try:
-            logging.debug("   ... sending keepalive signal to exchange.")
-            logging.debug("api_header used before keep alive ping: " + api_header_used)
-            listenkey = client.stream_get_listen_key()
-            client.stream_keepalive(listenkey)
-            # find out which of the headers is used in the API calls
-            # this might change after keep alive ping
-            for api_header in api_payload_limit:
-                if api_header in client.response.headers:
-                    api_header_used = api_header
-            logging.debug("api_header used after keep alive ping: " + api_header_used)
-        except Exception as e:
-            logging.warning("Error: " + str(e.code) + " (" + e.message + ")")
-
-    logging.debug(
-        "Check payload of API finished. Current Payload is "
-        + str(client.response.headers[api_header_used])
-    )
-    return client.response.headers[api_header_used]
-
-
-def API_close_connection(client):
-    #
-    # close API connection of a given client
-    # to keep the environment lean and clean
-    # TODO add different connection types for futures etc.
-
-    logging.debug("closing API connection")
-    try:
-        client.stream_close(client.stream_get_listen_key())
-    except Exception as e:
-        logging.warning("Error: " + str(e.code) + " (" + e.message + ")")
-    logging.debug("API connection closed (if no error has been reported before)")
-
-
-def file_remove_blanks(filename):
-    #
-    # read csv file and remove blank lines
-    # those blank lines are sometimes created when saving
-    # csv files under windows
-    #
-    logging.info("removing blank rows from " + filename)
-    data = pd.read_csv(filename, skip_blank_lines=True, low_memory=False)
-    data.dropna(how="all", inplace=True)
-    data.to_csv(filename, header=True)
-    logging.info("blank rows removed from " + filename)
-
-
-def merge_files(sourcefiles: list, targetfile: str):
-    data = pd.DataFrame()
-    data_new = pd.DataFrame()
-    for sourcefile in sourcefiles:
-        if os.path.isfile(sourcefile):
-            data_new = pd.read_csv(sourcefile)
-            data = data.append(data_new, ignore_index=True)
-    data.to_csv(targetfile, index=False)
-
 
 def download_all():
     """downloading all account information from exchange
 
-    this includes:
+    **this includes:
         - balances
         - history of trades
         - history of orders
@@ -1123,99 +1087,86 @@ def download_all():
     """
 
     logging.info("Downloading all account information from Exchange")
-    if os.name == "posix":
-        home_dir = os.environ["HOME"]
-    else:
-        home_dir = os.environ["USERPROFILE"]
+#    if len(sys.argv) == 2 and os.path.isfile(config_dir + sys.argv[1]):
+#        config = hlp.read_config(sys.argv[1])
+#    else:
+#        logging.debug('Ambiguous or no config file provided. Default config file ' + default_config_file + ' is being uses.')
+#        config = hlp.read_config(default_config_file)
 
-    current_time = time.strftime("%Y-%m-%d %H:%M:%S")
+    home_dir = config['paths']['home_dir']
+    data_dir = config['paths']['data_dir']
+    logfile = config['logging']['logfile']
+    log_level_file = config['logging']['log_level_file']
+    log_level_console = config['logging']['log_level_console']
 
-    logging.debug("get list of Trading Pairs to download data about ...")
-    client = Client()
+    logging.basicConfig(
+        level=log_level_file,
+        filename=logfile,
+        format="%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:\
+        %(funcName)s:%(message)s",
+        )
 
-    # get all symbols from the exchange and sort them alphabetically
-    trading_pairs_all = pd.DataFrame(client.get_all_tickers()).loc[:, ["symbol"]]
-    trading_pairs_all.sort_values(by=["symbol"], inplace=True)
+    list_of_trading_pairs = hlp.get_trading_pairs('USDT')
 
-    # filter out USDT pairs
-    # take this part out in case other trading pairs should be downloaded too
-    list_of_trading_pairs = trading_pairs_all[
-        trading_pairs_all.symbol.str.contains("USDT")
-    ]
-    list_of_trading_pairs = list_of_trading_pairs["symbol"].values.tolist()
-
-    logging.debug(
-        "Amount of Trading Pairs available on exchange: "
-        + str(len(list_of_trading_pairs))
-    )
     # get account specific information
     # defining variables
 
-    account_names = ["JAN", "RITA", "JAKOB", 'JAN_COINS']
-    account_types = ["SPOT", "FUTURES"]  # , 'FUTURES'] #'MARGIN'] # list of available types: https://binance-docs.github.io/apidocs/spot/en/#daily-account-snapshot-user_data
+    accounts = config['accounts']
+    account_groups = config['account_groups']
+
+    if config['modules']['balance_ticker']:
+        balance_ticker(accounts, account_groups, home_dir, config['telegram']['token'])
 
     logging.info("looping through accounts and account types")
     # merge snapshot files for reporting with excel pivot tables
-    for account_name in account_names:
-        for account_type in account_types:
-            if (account_name == 'JAKOB' or account_name == 'JAN_COINS') and account_type == 'FUTURES':
-                continue
-            PUBLIC = os.environ.get("READ_PUBLIC_" + account_name + "_" + account_type)
-            SECRET = os.environ.get("READ_SECRET_" + account_name + "_" + account_type)
+    for account in accounts:
 
-            file_directory = (
-                home_dir + "/dropbox/finance/binance/source data/" + account_name + "/"
-            )
-            open_orders_file = file_directory + "open_orders_" + account_name + ".csv"
-            orders_file = file_directory + "orders_" + account_name + ".csv"
-            trades_file = file_directory + "trades_" + account_name + ".csv"
-            balances_file = file_directory + "balances_" + account_name + "_" + account_type + ".csv"
-            bal_fut_positions_file = file_directory + "balances_" + account_name + "_" + account_type + "_positions.csv"
-            bal_fut_assets_file = file_directory + "balances_" + account_name + "_" + account_type + "_assets.csv"
-            prices_file = file_directory + "prices_" + account_name + ".csv"
-            deposits_file = file_directory + "deposits_" + account_name + ".csv"
-            withdrawals_file = file_directory + "withdrawals_" + account_name + ".csv"
-            snapshots_balances_file = (file_directory + "snapshot_daily_" + account_name + "_" + account_type + "_balances.csv")
-            snapshots_assets_file = (file_directory + "snapshot_daily_" + account_name + "_" + account_type + "_assets.csv")
-            snapshots_positions_file = (file_directory + "snapshot_daily_" + account_name + "_" + account_type + "_positions.csv")
+        account_details = accounts[account]
+        PUBLIC = os.environ.get(account_details['osvar_api_public'])
+        SECRET = os.environ.get(account_details['osvar_api_secret'])
 
-            writetype = "w"
-    
+        file_directory = data_dir + "/" + account_details['dir'] + "/"
+        open_orders_file = file_directory + "open_orders_" + account + ".csv"
+        orders_file = file_directory + "orders_" + account + ".csv"
+        trades_file = file_directory + "trades_" + account + ".csv"
+        balances_file = file_directory + "balances_" + account + ".csv"
+        bal_fut_positions_file = file_directory + "balances_" + account + "_positions.csv"
+        bal_fut_assets_file = file_directory + "balances_" + account + "_assets.csv"
+        prices_file = file_directory + "prices.csv"
+        deposits_file = file_directory + "deposits_" + account + ".csv"
+        withdrawals_file = file_directory + "withdrawals_" + account + ".csv"
+        snapshots_balances_file = (file_directory + "snapshot_daily_" + account + "_balances.csv")
+        snapshots_assets_file = (file_directory + "snapshot_daily_" + account + "_assets.csv")
+        snapshots_positions_file = (file_directory + "snapshot_daily_" + account + "_positions.csv")
+
+        writetype = "w"
+
+        modules = config['modules']
+
+        if modules['download_balances']: 
             download_balances(
-                account_name, account_type, PUBLIC, SECRET, balances_file, bal_fut_positions_file, bal_fut_assets_file, writetype
-            )
-            
+                account, account_details['type'], PUBLIC, SECRET, balances_file, bal_fut_positions_file, bal_fut_assets_file, writetype)
+
+        if modules['download_trades']:
             download_trades(
-                account_name,
-                account_type,
-                PUBLIC,
-                SECRET,
-                list_of_trading_pairs,
-                trades_file,
-            )
+                account, account_details['type'], PUBLIC, SECRET, list_of_trading_pairs, trades_file)
 
-            download_orders(
-                account_name,
-                account_type,
-                PUBLIC,
-                SECRET,
-                list_of_trading_pairs,
-                orders_file,
-            )
+        if modules['download_orders']:
+            download_orders(account, account_details['type'], PUBLIC, SECRET, list_of_trading_pairs, orders_file)
 
-            download_open_orders(
-                account_name, account_type, PUBLIC, SECRET, open_orders_file
-            )
+        if modules['download_open_orders']:
+            download_open_orders(account, account_details['type'], PUBLIC, SECRET, open_orders_file)
 
-            download_deposits(account_name, account_type, PUBLIC, SECRET, deposits_file)
+        if modules['download_deposits']:
+            download_deposits(account, account_details['type'], PUBLIC, SECRET, deposits_file)
 
-            download_withdrawals(
-                account_name, account_type, PUBLIC, SECRET, withdrawals_file
-            )
+        if modules['download_withdrawals']:
+            download_withdrawals(account, account_details['type'], PUBLIC, SECRET, withdrawals_file)
 
+        if modules['download_daily_account_snapshots']:
             download_daily_account_snapshots(
-                account_name,
-                account_type,
+                account,
+                account_details['type'],
                 PUBLIC,
                 SECRET,
                 snapshots_balances_file,
@@ -1223,35 +1174,54 @@ def download_all():
                 snapshots_assets_file
             )
 
+        if modules['download_prices']:
             download_prices(prices_file)
 
-            logging.info(
-                "Finished downloading and writing all account data from Binance for "
-                + account_type
-                + "-account of "
-                + account_name
-            )
+        logging.info(
+            "Finished downloading and writing all account data from Binance for "
+            + account_details['type']
+            + "-account of "
+            + account
+        )
 
-    logging.info("Merging snapshot files from different accounts!")            
-    targetfile = (home_dir + "/dropbox/finance/binance/source data/snapshots_daily_all_accounts.csv")
-    sourcefiles = []
-    account_names = ['JAN', 'RITA', 'JAKOB', 'JAN_COINS']
-    account_types = ['SPOT', 'FUTURES']
-    for account_type in account_types:
-        for account_name in account_names:
-            file_directory = home_dir + "/dropbox/finance/binance/source data/" + account_name + "/"
+    if modules['download_daily_account_snapshots']:
+        logging.info("Merging snapshot files from different accounts!")            
+        targetfile = (data_dir + "/snapshots_daily_all_accounts.csv")
+        sourcefiles = []
+        for account in accounts:
+            account_details = accounts[account]
+            file_directory = data_dir + "/" + account_details['dir'] + "/"
             filename = (
                 file_directory
                 + "snapshot_daily_"
-                + account_name
+                + account
                 + "_"
-                + account_type
+                + account_details['type']
                 + "_balances"
                 + ".csv"
             )
             sourcefiles.append(filename)
-    merge_files(sourcefiles, targetfile)
-    logging.info("Merging snapshot files finished!")
+        hlp.merge_files(sourcefiles, targetfile)
+        logging.info("Merging snapshot files finished!")
+
+    if modules['download_balances']:
+        logging.info("Merging balances files from different accounts!")            
+        targetfile = (data_dir + "/balances_all_accounts.csv")
+        sourcefiles = []
+        for account in accounts:
+            account_details = accounts[account]
+            file_directory = data_dir + "/" + account_details['dir'] + "/"
+            filename = (
+                file_directory
+                + "balances_"
+                + account
+                + ".csv"
+            )
+            sourcefiles.append(filename)
+        hlp.merge_files(sourcefiles, targetfile)
+        logging.info("Merging snapshot files finished!")
+
+
 
 if __name__ == "__main__":
     download_all()

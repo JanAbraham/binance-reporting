@@ -1,0 +1,144 @@
+---
+#
+# configuration file for python-binance-reporting package
+#
+logging:
+  # used for writing status messages
+  # log levels could be: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_level_file: INFO
+  log_level_console: WARNING
+  logfile: binance-reporting.log
+
+modules:
+  # mandatory
+  # provides the modules to be run
+  # 'yes' means this module will run, 'no' means it wont
+  # please dont remove any of the lines
+  download_balances: yes
+  download_daily_account_snapshots: yes
+  download_trades: yes
+  download_orders: yes
+  download_open_orders: yes
+  download_deposits: yes
+  download_withdrawals: yes
+  balance_ticker: yes
+  download_prices: yes
+  
+paths:
+  # paths where the downloaded data will be stored
+  # home_dir is being filled automatically if nothing is provided here
+  home_dir: ''
+  # NOTE: all of the following directories are sub-directories from 'home_dir'
+  data_dir: /dropbox/finance/binance/source data
+  # NOTE: all of the following dir's are sub-directories of 'data_dir'
+  balances_dir: /balances
+
+telegram:
+  # used for pushing notifications to Telegram
+  # make sure this one has access to the telegram channel you want to post to
+  # the telegram channel need to be public
+  token: 929664379:AAE-LEy0M4B-zKBdNfyH6Slc8vDDU7tuQSk
+
+accounts:
+  JAN:
+    dir: JAN
+    type: SPOT
+    osvar_api_public: READ_PUBLIC_JAN_SPOT
+    osvar_api_secret: READ_SECRET_JAN_SPOT
+    chat_pseudo: Jan
+    chat_id: '@SwissCryptoTrader_0002'
+    investment: 8896
+    cash: 0
+    portval: 0
+    profit: 0
+  JAN-FUT:
+    dir: JAN
+    type: FUTURES
+    osvar_api_public: READ_PUBLIC_JAN_FUTURES
+    osvar_api_secret: READ_SECRET_JAN_FUTURES
+    chat_pseudo: JanF
+    chat_id: '@SwissCryptoTrader_0003'
+    investment: 6438.70955153
+    cash: 0
+    portval: 0
+    profit: 0
+  JAN-COINS:
+    dir: JAN
+    type: SPOT
+    osvar_api_public: READ_PUBLIC_JAN_COINS_SPOT
+    osvar_api_secret: READ_SECRET_JAN_COINS_SPOT
+    chat_pseudo: JanC
+    chat_id: '@SwissCryptoTrader_0004'
+    investment: 0
+    cash: 0
+    portval: 0
+    profit: 0
+  RITA:
+    dir: RITA
+    type: SPOT
+    osvar_api_public: READ_PUBLIC_RITA_SPOT
+    osvar_api_secret: READ_SECRET_RITA_SPOT
+    chat_pseudo: Rit
+    chat_id: '@SwissCryptoTrader_0004'
+    investment: 18251
+    cash: 0
+    portval: 0
+    profit: 0
+  RITA-FUT:
+    dir: RITA
+    type: FUTURES
+    osvar_api_public: READ_PUBLIC_RITA_FUTURES
+    osvar_api_secret: READ_SECRET_RITA_FUTURES
+    chat_pseudo: RitF
+    chat_id: '@SwissCryptoTrader_0003'
+    investment: 9676.48862635
+    cash: 0
+    portval: 0
+    profit: 0
+  JAKOB:
+    dir: JAKOB
+    type: SPOT
+    osvar_api_public: READ_PUBLIC_JAKOB_SPOT
+    osvar_api_secret: READ_SECRET_JAKOB_SPOT
+    chat_pseudo: Jak
+    chat_id: '@SwissCryptoTrader_0002'
+    investment: 8411
+    cash: 0
+    portval: 0
+    profit: 0
+
+account_groups:
+  ALL:
+    accounts: [JAN, RITA, JAKOB, JAN-FUT, RITA-FUT]
+    chat_id: '@SwissCryptoTrader_0001'
+    chat_pseudo: all
+  HODL:
+    accounts: [RITA, JAN-COINS]
+    chat_id: '@SwissCryptoTrader_0004'
+    chat_pseudo: hodl-all
+  TRADE-FUT:
+    accounts: [JAN-FUT, RITA-FUT]
+    chat_id: '@SwissCryptoTrader_0003'
+    chat_pseudo: fut-all
+  TRADE-SPOT:
+    accounts: [JAN, JAKOB]
+    chat_id: '@SwissCryptoTrader_0002'
+    chat_pseudo: spot-all
+
+download_daily_account_snapshots:
+  # Binance only saves snapshots only for last 180 days
+  # this can be shortened here to reduce load on API
+  # snapshots older than 180 days are saved in the csv file
+  snapshot_days_max: 180
+  # amount of snapshot days per request to exchange
+  # max value is 30 (given from Binance)
+  # this can be set to less than 30 in case of connection errors
+  snapshot_days_per_request: 30
+
+download_klines:
+  # if empty, all the tradingpairs will be taken from the exchange
+  # you can provide a text, which needs to be included 
+  # in the trading pair, e.g. 'USDT' would only take those 
+  # trading pairs, which have USDT included, e.g. BTCUSDT etc
+  trading_pairs: 'USDT'
+  kline_interval: ['5m', '1d']
