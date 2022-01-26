@@ -1,14 +1,93 @@
-import time  # used for sleep / cool-off
+import os       # find home directory
+import time     # sleep / cool-off
+import yaml     # read config file
 import logging
+from binance.client import Client       # read trading pairs from exchange
+import pandas as pd
 
-logfile = "binance-reporting.log"
-loglevel = "INFO"  #'INFO', 'DEBUG'
-logging.basicConfig(
-    level=loglevel,
-    filename=logfile,
-    format="%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:\
-    %(funcName)s:%(message)s",
-    )
+def read_config(config_dir, config_file_default, args):
+    """read config from a given file and convert it into a dictionary
+
+    ** Procedure
+        - check if there was a config file given
+        - read the default config file into a dictionary
+        - read additional config file if provided as argument
+        - update default config with additional config
+        - change some path values in the dictionary
+        - give the dictionary back as a result
+
+    :param config_dir: required
+    :type config_dir: str
+
+    :param config_file: required
+    :type config_file: str
+
+    :param args: required
+    :type args: list
+
+    :returns: dictionary with config info
+
+    """
+    logging.info('read configuration file')
+    config_file_default = config_dir + config_file_default
+    with open(config_file_default, 'r') as file:
+        config = yaml.safe_load(file)
+
+    if len(args) == 2 and os.path.isfile(config_dir + args[1]):
+        logging.debug('Differential config file found! Reading ...')
+        config_file_diff = config_dir + args[1]
+        with open(config_file_diff, 'r') as file:
+            config_diff = yaml.safe_load(file)
+        logging.debug('Updating config with differential config.')
+        config.update(config_diff)
+
+    config['paths']['home_dir'] = os.path.expanduser("~")
+    config['paths']['data_dir'] = config['paths']['home_dir'] + "/" + config['paths']['data_dir']
+    config['paths']['balances_dir'] = config['paths']['data_dir'] + "/" + config['paths']['balances_dir']
+
+    logging.info('Finished reading configuration.')
+    return config
+
+
+def get_trading_pairs(pattern):
+    """get trading pairs from exchange which contain a given string (e.g. USDT)
+
+    **Goal
+        - reduce the amount of trading pairs to walk through, e.g. when downloading historic trades
+
+    **Procedure
+        - get list of available trading pairs from exchange
+        - filter the list according to pattern provided
+
+    :param pattern: required (if empty, all trading pairs will be returned)
+    :type pattern: str
+
+    :returns: list of filtered trading pairs available on exchange
+
+    """
+
+    logging.debug("get list of Trading Pairs to download data about ...")
+    client = Client()
+
+    # get all symbols from the exchange and sort them alphabetically
+    trading_pairs_all = pd.DataFrame(client.get_all_tickers()).loc[:, ["symbol"]]
+
+    # filter out USDT pairs
+    # take this part out in case other trading pairs should be downloaded too
+    list_of_trading_pairs = trading_pairs_all[
+        trading_pairs_all.symbol.str.contains(pattern)
+        ]
+
+    list_of_trading_pairs.sort_values(by=["symbol"], inplace=True)
+    list_of_trading_pairs = list_of_trading_pairs["symbol"].values.tolist()
+
+    logging.debug(
+        "Amount of Trading Pairs available on exchange: "
+        + str(len(list_of_trading_pairs)))
+
+
+    return list_of_trading_pairs
+
 
 def API_weight_check(client):
     """verify current payload of Binance API and trigger cool-off
@@ -73,8 +152,8 @@ def API_weight_check(client):
                 if api_header in client.response.headers:
                     api_header_used = api_header
             logging.debug("api_header used after keep alive ping: " + api_header_used)
-        except Exception as e:
-            logging.warning("Error: " + str(e))
+        except:
+            logging.warning("API error. Trying again")
 
     logging.debug(
         "Check payload of API finished. Current Payload is "
@@ -103,8 +182,8 @@ def API_close_connection(client):
     logging.debug("closing API connection")
     try:
         client.stream_close(client.stream_get_listen_key())
-    except Exception as e:
-        logging.warning("Error: " + str(e.code) + " (" + e.message + ")")
+    except:
+        logging.warning("API error. Continuing.")
     logging.debug("API connection closed (if no error has been reported before)")
 
 
@@ -129,3 +208,12 @@ def file_remove_blanks(filename):
     data.dropna(how="all", inplace=True)
     data.to_csv(filename, header=True)
     logging.info("blank rows removed from " + filename)
+
+def merge_files(sourcefiles: list, targetfile: str):
+    data = pd.DataFrame()
+    data_new = pd.DataFrame()
+    for sourcefile in sourcefiles:
+        if os.path.isfile(sourcefile):
+            data_new = pd.read_csv(sourcefile)
+            data = data.append(data_new, ignore_index=True)
+    data.to_csv(targetfile, index=False)

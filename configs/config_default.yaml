@@ -7,7 +7,6 @@ logging:
   # log levels could be: DEBUG, INFO, WARNING, ERROR, CRITICAL
   log_level_file: INFO
   log_level_console: WARNING
-  logfile: binance-reporting.log
 
 modules:
   # mandatory

@@ -18,8 +18,12 @@ better reporting with excel pivot tables
 TODO standardize column names accross different files
 (e.g. insertTime vs. updateTime vs. updatetime or 
 asset vs. coin)
-TODO add an addresslist-translation-file to translate cryptic address names into 
-human readable names and use it for deposits & withdrawals
+TODO add an addresslist-translation-file to translate cryptic address names into human readable names and use it for deposits & withdrawals
+TODO remove account type from log info
+TODO change print to log to variables %x etc
+TODO download balances: make file parameters optional, so that the ticker option doesnt trigger file writing
+TODO remove error messages about 'returning a view vesus a copy
+TODO incorporate kline downloads into binance_download.py
 """
 
 import os               # set home directory of current user depending on OS
@@ -31,16 +35,42 @@ import helpers as hlp
 import logging
 import telegram.ext     # sending balance information
 
-logging.info("Binance-Download: Loading config.")
-# for module execution via command line
-config_dir = '../' 
+# basic settings for configuration
+config_dir = '../configs/'
 config_file_default = 'config_default.yaml'
 
-#for debugging, config_dir = ''
+# basic settings for logging
+log_dir = '../logs/'
+log_file = "binance-reporting.log"
+log_level_file = 'DEBUG'
+
+# correct config, if py in debug mode
 if not os.path.isfile(config_dir + config_file_default):
-    config_dir = ''
+    print('config not available in ' + os.getcwd())
+    config_dir = './configs/'
+    log_dir = './logs/'
+
+# reset logging to the right config as in config file
+logging.basicConfig(
+    level=log_level_file,
+    filename=log_dir + log_file,
+    format="%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:\
+    %(funcName)s:%(message)s",
+    )
+
+logging.info(" --- Binance-Download: Loading config ... ---")
 
 config = hlp.read_config(config_dir, config_file_default, sys.argv)
+
+log_level_file = config['logging']['log_level_file']
+
+logging.basicConfig(
+    level=log_level_file,
+    filename=log_dir + log_file,
+    format="%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:\
+    %(funcName)s:%(message)s", force = True
+    )
+
 
 def download_balances(
     account_name: str,  # used to differentiate info in debug log
@@ -278,7 +308,8 @@ def download_daily_account_snapshots(
     start_time_ms = current_time_ms - snapshot_days_max_ms
     if os.path.isfile(snapshots_balances_file):
         balances = pd.read_csv(snapshots_balances_file)
-        start_time_ms = balances["updateTime"].max() + 1
+        if not balances.empty:
+            start_time_ms = balances["updateTime"].max() + 1
 
     if current_time_ms - start_time_ms < daily_ms:
         logging.info("No newer snapshot available.")
@@ -586,7 +617,6 @@ def download_trades(
             logging.warning("API error. Trying again")
             continue
 
-
     logging.debug(
         "Amount of new Trading Records to be written: " + str(len(new_trades))
     )
@@ -778,7 +808,8 @@ def download_deposits(account_name, account_type, PUBLIC, SECRET, deposits_file)
     # fetch list of already downloaded deposits
     if os.path.isfile(deposits_file):
         deposits = pd.read_csv(deposits_file)
-        start_time_ms = int(deposits.insertTime.max() + 1)
+        if not deposits.empty:
+            start_time_ms = int(deposits.insertTime.max() + 1)
 
     # fetch list of new deposits, if any
     logging.debug("connecting to binance ...")
@@ -902,7 +933,8 @@ def download_withdrawals(account_name, account_type, PUBLIC, SECRET, withdrawals
     # fetch list of already downloaded transactions
     if os.path.isfile(withdrawals_file):
         transactions = pd.read_csv(withdrawals_file)
-        start_time_ms = int(transactions.insertTime.max() + 1)
+        if not transactions.empty:
+            start_time_ms = int(transactions.insertTime.max() + 1)
 
     # fetch list of new transactions, if any
     logging.debug("connecting to binance ...")
@@ -1072,7 +1104,6 @@ def download_prices(prices_file):
     logging.info("Finished writing Prices!")
 
 
-
 def download_all():
     """downloading all account information from exchange
 
@@ -1087,38 +1118,20 @@ def download_all():
     """
 
     logging.info("Downloading all account information from Exchange")
-#    if len(sys.argv) == 2 and os.path.isfile(config_dir + sys.argv[1]):
-#        config = hlp.read_config(sys.argv[1])
-#    else:
-#        logging.debug('Ambiguous or no config file provided. Default config file ' + default_config_file + ' is being uses.')
-#        config = hlp.read_config(default_config_file)
 
     home_dir = config['paths']['home_dir']
     data_dir = config['paths']['data_dir']
-    logfile = config['logging']['logfile']
-    log_level_file = config['logging']['log_level_file']
-    log_level_console = config['logging']['log_level_console']
-
-    logging.basicConfig(
-        level=log_level_file,
-        filename=logfile,
-        format="%(asctime)s:%(levelname)s:%(module)s:%(lineno)d:\
-        %(funcName)s:%(message)s",
-        )
-
-    list_of_trading_pairs = hlp.get_trading_pairs('USDT')
-
-    # get account specific information
-    # defining variables
+    telegram_token = config['telegram']['token']
 
     accounts = config['accounts']
     account_groups = config['account_groups']
 
     if config['modules']['balance_ticker']:
-        balance_ticker(accounts, account_groups, home_dir, config['telegram']['token'])
+        balance_ticker(accounts, account_groups, home_dir, telegram_token)
+
+    list_of_trading_pairs = hlp.get_trading_pairs('USDT')
 
     logging.info("looping through accounts and account types")
-    # merge snapshot files for reporting with excel pivot tables
     for account in accounts:
 
         account_details = accounts[account]
