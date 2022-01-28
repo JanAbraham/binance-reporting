@@ -1,0 +1,25 @@
+logging:
+  # used for writing status messages
+  # activate logging or not: yes/no
+  log_activate: yes
+  # log levels could be: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_level: INFO
+  # log target can be set to file or console
+  log_target: console
+  # in case log_target is set to file, this file will be used in log/ folder
+  log_file : binance-reporting.log
+
+modules:
+  # mandatory
+  # provides the modules to be run
+  # 'yes' means this module will run, 'no' means it wont
+  # please dont remove any of the lines
+  download_balances: no
+  download_daily_account_snapshots: yes
+  download_trades: no
+  download_orders: no
+  download_open_orders: no
+  download_deposits: no
+  download_withdrawals: no
+  balance_ticker: no
+  download_prices: no

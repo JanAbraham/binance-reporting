@@ -28,7 +28,7 @@ def read_config(config_dir, config_file_default, args):
     :returns: dictionary with config info
 
     """
-    logging.info('read configuration file')
+    logging.info(' - Read configuration file. -')
     config_file_default = config_dir + config_file_default
     with open(config_file_default, 'r') as file:
         config = yaml.safe_load(file)
@@ -45,7 +45,7 @@ def read_config(config_dir, config_file_default, args):
     config['paths']['data_dir'] = config['paths']['home_dir'] + "/" + config['paths']['data_dir']
     config['paths']['balances_dir'] = config['paths']['data_dir'] + "/" + config['paths']['balances_dir']
 
-    logging.info('Finished reading configuration.')
+    logging.info(' - Finished reading configuration. -')
     return config
 
 
@@ -70,15 +70,15 @@ def get_trading_pairs(pattern):
     client = Client()
 
     # get all symbols from the exchange and sort them alphabetically
-    trading_pairs_all = pd.DataFrame(client.get_all_tickers()).loc[:, ["symbol"]]
+    list_of_trading_pairs = pd.DataFrame(client.get_all_tickers()).loc[:, ["symbol"]]
 
     # filter out USDT pairs
     # take this part out in case other trading pairs should be downloaded too
-    list_of_trading_pairs = trading_pairs_all[
-        trading_pairs_all.symbol.str.contains(pattern)
-        ]
+    list_of_trading_pairs = list_of_trading_pairs[
+        list_of_trading_pairs.symbol.str.contains(pattern)]
 
     list_of_trading_pairs.sort_values(by=["symbol"], inplace=True)
+    
     list_of_trading_pairs = list_of_trading_pairs["symbol"].values.tolist()
 
     logging.debug(
@@ -203,11 +203,11 @@ def file_remove_blanks(filename):
 
     :returns: written csv file without empty rows
     """
-    logging.info("removing blank rows from " + filename)
+    logging.info(" - removing blank rows from %s", filename)
     data = pd.read_csv(filename, skip_blank_lines=True, low_memory=False)
     data.dropna(how="all", inplace=True)
     data.to_csv(filename, header=True)
-    logging.info("blank rows removed from " + filename)
+    logging.info(" - blank rows removed from %s", filename)
 
 def merge_files(sourcefiles: list, targetfile: str):
     data = pd.DataFrame()
@@ -215,5 +215,6 @@ def merge_files(sourcefiles: list, targetfile: str):
     for sourcefile in sourcefiles:
         if os.path.isfile(sourcefile):
             data_new = pd.read_csv(sourcefile)
-            data = data.append(data_new, ignore_index=True)
+            data = pd.concat([data, data_new])
+            #data = data.append(data_new, ignore_index=True)
     data.to_csv(targetfile, index=False)
