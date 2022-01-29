@@ -1,4 +1,9 @@
 """Different functions for downloading and saving data from exchange.
+.. module:: binance_download
+   :platform: Unix, Windows
+   :synopsis: A useful module indeed.
+
+.. moduleauthor:: Jan Abraham <jan.abraham@bluewin.com>
 
 functions available for:
     - history of trades
@@ -266,6 +271,12 @@ def download_daily_account_snapshots(
     snapshots_assets_file
     ):
     """download daily account snapshots from exchange and write it into a csv file
+
+    .. module:: download_daily_account_snapshots
+    :platform: Unix, Windows
+    :synopsis: A useful module for downloading daily snapshots.
+
+    .. moduleauthor:: Jan Abraham <jan.abraham@bluewin.com>
 
     **Procedure:
         - check if previous downloads exists, read them and determine the date of the last downloaded snapshot

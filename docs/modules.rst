@@ -1,8 +1,7 @@
-python-binance-reporting
-========================
+binance-reporting
+=================
 
 .. toctree::
    :maxdepth: 4
 
    binance-reporting
-   

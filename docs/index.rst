@@ -1,20 +1,20 @@
 .. python-binance-reporting documentation master file, created by
-   sphinx-quickstart on Thu Feb 29 01:16:48 2022.
+   sphinx-quickstart on Sat Jan 29 12:49:48 2022.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
-.. include:: ../README.rst
-
-Contents
-========
+Welcome to python-binance-reporting's documentation!
+====================================================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
+   :caption: Contents:
 
-   overview
-   config
    modules
-   changelog
 
-Index
-=====
+Indices and tables
+==================
 
 * :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

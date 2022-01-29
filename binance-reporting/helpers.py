@@ -1,3 +1,10 @@
+"""Different functions for downloading and saving data from exchange.
+.. module:: helpers
+   :platform: Unix, Windows
+   :synopsis: A useful module indeed.
+
+.. moduleauthor:: Jan Abraham <jan.abraham@bluewin.com>
+"""
 import os       # find home directory
 import time     # sleep / cool-off
 import yaml     # read config file
