@@ -286,28 +286,21 @@ def download_daily_account_snapshots(
         - USDT Price per asset from the date of the snapshot
         - PortVal = Value of all balances together from this day
 
-    :param config_dir: required
-    :type config_dir: str
+    :param str account_name: required. The name of the account. Is used in csv exports.
+    :param account_type: required. The type of the account.
+    :type account_type: SPOT or FUTURE
+    :param str PUBLIC: required. Public key of your exchange account
+    :param str SECRET: required. Secret key of your exchange account
+    :param str snapshot_balances_file: optional. filename (incl. absolute path), where the balances per day are exported to (in csv-format). For SPOT and FUTURE accounts.
+    :param str snapshot_positions_file: optional. filename (incl. absolute path), where the positions per day are exported to (in csv-format). For FUTURE accounts only.
+    :param str snapshot_assets_file: optional. filename (incl. absolute path), where the assets per day are exported to (in csv-format). For SPOT and FUTURE accounts.
 
-    :param config_file: required
-    :type config_file: str
+    :return: portfolio value and written csv file(s) in case filename(s) have been provided
+    :rtype: float64
 
-    :param args: required
-    :type args: list
-
-    :returns: dictionary with config info
-    
-    :param account_name: required. used in the log file for easier debugging.
-    :param account_type: requires. either SPOT or FUTURES
-    :param PUBLIC: required public part of API key to open connection to exchange
-    :param SECRET: required secret part of API key to open connection to exchange
-    :param values_file: csv file for overall daily portfolio values
-    :param balances_file: csv file for detailed balances per asset per day
-
-    Returns:
-    - writes csv file with snapshots of the binance account
-    TODO add snapshot download of Futures Account
+    TODO: make snapshot positions file an optional parameter
     """
+
     import math
 
     logging.info(" - Start downloading daily snapshots for account %s -", account_name)

@@ -1,17 +1,8 @@
-.. python-binance-reporting documentation master file, created by
-   sphinx-quickstart on Thu Feb 29 01:16:48 2022.
-
-.. include:: ../README.rst
-
-Contents
-========
+python-binance-reporting
+========================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
 
-   binance_download
-
-Index
-==================
-
-* :ref:`genindex`
+   binance-reporting
+   setup
