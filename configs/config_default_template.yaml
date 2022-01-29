@@ -1,0 +1,95 @@
+---
+#
+# configuration template for python-binance-reporting package
+#
+# This will NOT work as it is. Customization need to be made first.
+# Please consult documentation first: https://python-binance-reporting.readthedocs.io/en/latest/
+#
+paths:
+  # paths where the downloaded data will be stored
+  # if '' is provided, home_dir is being filled automatically with the users home dir
+  home_dir: ''
+  # NOTE: all of the following directories are sub-directories from 'home_dir'
+  data_dir: /binance data
+  # NOTE: all of the following dir's are sub-directories of 'data_dir'
+  balances_dir: /binance data/balances
+
+modules:
+  # mandatory
+  # provides the modules to be run
+  # 'yes' means this module will run, 'no' means it wont
+  # please dont remove any of the lines
+  download_balances: yes
+  download_daily_account_snapshots: yes
+  download_trades: yes
+  download_orders: yes
+  download_open_orders: yes
+  download_deposits: yes
+  download_withdrawals: yes
+  balance_ticker: yes
+  download_prices: yes
+
+accounts:
+  Account1:
+    dir: dir1
+    type: SPOT
+    osvar_api_public: READ_PUBLIC_A1_SPOT
+    osvar_api_secret: READ_SECRET_A1_SPOT
+    chat_pseudo: A1
+    chat_id: '@A1'
+    investment: 1000
+    cash: 0
+    portval: 0
+    profit: 0
+  Account2:
+    dir: dir2
+    type: FUTURES
+    osvar_api_public: READ_PUBLIC_A2_FUTURES
+    osvar_api_secret: READ_SECRET_A2_FUTURES
+    chat_pseudo: A2
+    chat_id: '@S2'
+    investment: 2000
+    cash: 0
+    portval: 0
+    profit: 0
+
+account_groups:
+  ALL:
+    accounts: [A1, A2]
+    chat_id: '@A3'
+    chat_pseudo: all
+
+telegram:
+  # used for pushing notifications to Telegram
+  # make sure this one has access to the telegram channel you want to post to
+  # the telegram channel need to be public
+  token: <telegram-token>
+    
+logging:
+  # used for writing status messages
+  # activate logging or not: yes/no
+  log_activate: yes
+  # log levels could be: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_level: INFO
+  # log target can be set to file or console
+  log_target: console
+  # in case log_target is set to file, this file will be used in log/ folder
+  log_file : binance-reporting.log
+
+download_klines:
+  # if empty, all the tradingpairs will be taken from the exchange
+  # you can provide a text, which needs to be included 
+  # in the trading pair, e.g. 'USDT' would only take those 
+  # trading pairs, which have USDT included, e.g. BTCUSDT etc
+  trading_pairs: 'USDT'
+  kline_interval: ['5m', '1d']
+  
+download_daily_account_snapshots:
+  # Binance only saves snapshots only for last 180 days
+  # this can be shortened here to reduce load on API
+  # snapshots older than 180 days are saved in the csv file
+  snapshot_days_max: 180
+  # amount of snapshot days per request to exchange
+  # max value is 30 (given from Binance)
+  # this can be set to less than 30 in case of connection errors
+  snapshot_days_per_request: 30
