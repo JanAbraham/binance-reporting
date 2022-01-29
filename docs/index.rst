@@ -1,5 +1,5 @@
-.. python-binance documentation master file, created by
-   sphinx-quickstart on Thu Sep 21 20:24:54 2017.
+.. python-binance-reporting documentation master file, created by
+   sphinx-quickstart on Thu Feb 29 01:16:48 2022.
 
 .. include:: ../README.rst
 
