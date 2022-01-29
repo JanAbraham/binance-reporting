@@ -1,6 +1,8 @@
 Getting Started
 ===============
 
+*This document is WIP*
+
 Installation
 ------------
 
@@ -26,3 +28,4 @@ To use signed account methods you are required to `create an API Key  <https://w
 Customize the configuration to your environment
 -----------------------------------------------
 This downloader comes with a configuration file as a template :file:`/configs/config_default_template.yaml` 
+

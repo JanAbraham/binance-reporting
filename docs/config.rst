@@ -1,6 +1,8 @@
 Configuration
 =============
 
+*This document is WIP*
+
 Paths
 -----
 Where should the files be saved to?

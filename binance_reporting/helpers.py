@@ -7,8 +7,6 @@ import pandas as pd
 
 def read_config(config_dir, config_file_default, args):
     """read config from a given file and convert it into a dictionary
-    Reading configuration data
-    --------------------------
     
     **Procedure**
         - check if there was a config file given

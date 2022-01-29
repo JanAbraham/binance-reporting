@@ -1,41 +1,26 @@
 Download Market Data
 ====================
 
-$project will solve your problem of where to start with documentation,
-by providing a basic explanation of how to do it easily.
+*This document is WIP*
 
-Look how easy it is to use:
+There are 2 different functions, which this project allows you to download easily:
+    - asset prices
+    - candles
 
-    import project
-    # Get your stuff done
-    project.do_stuff()
-
-Features
---------
-
-- Be awesome
-- Make things faster
-
-Installation
+Asset prices
 ------------
 
-Install $project by running:
+TODO: insert code for downloading asset prices
 
-    install project
+Candles:
+--------
 
-Contribute
-----------
+**Parameters**
+    - symbol
+    - timeframe
+  
+Technical Indicators
+--------------------
+Together with the candles, you have the option to download Technical Indicators.
 
-- Issue Tracker: github.com/$project/$project/issues
-- Source Code: github.com/$project/$project
-
-Support
--------
-
-If you are having issues, please let us know.
-We have a mailing list located at: project@google-groups.com
-
-License
--------
-
-The project is licensed under the BSD license.
+TODO: add list of technical indicators
