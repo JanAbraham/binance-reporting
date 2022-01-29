@@ -1,11 +1,17 @@
-Welcome to Lumache's documentation!
-===================================
+.. python-binance documentation master file, created by
+   sphinx-quickstart on Thu Sep 21 20:24:54 2017.
 
-**Lumache** (/lu'make/) is a Python library for cooks and food lovers that
-creates recipes mixing random ingredients.  It pulls data from the `Open Food
-Facts database <https://world.openfoodfacts.org/>`_ and offers a *simple* and
-*intuitive* API.
+.. include:: ../README.rst
 
-.. note::
+Contents
+========
 
-   This project is under active development.
+.. toctree::
+   :maxdepth: 2
+
+   overview
+
+Index
+==================
+
+* :ref:`genindex`
