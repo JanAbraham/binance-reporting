@@ -9,9 +9,7 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   overview
-   config
-   modules
+   binance-reporting/binance_download.py
 
 Index
 ==================
