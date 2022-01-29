@@ -5,4 +5,4 @@ python-binance-reporting
    :maxdepth: 4
 
    binance-reporting
-   setup
+   

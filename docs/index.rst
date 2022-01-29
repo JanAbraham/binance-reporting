@@ -7,13 +7,14 @@ Contents
 ========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    overview
    config
    modules
+   changelog
 
 Index
-==================
+=====
 
 * :ref:`genindex`
