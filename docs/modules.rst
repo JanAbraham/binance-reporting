@@ -1,7 +1,8 @@
-binance-reporting
-=================
+Technical Documentation of Modules
+==================================
 
 .. toctree::
    :maxdepth: 4
 
-   binance-reporting
+   binance_reporting
+   helpers

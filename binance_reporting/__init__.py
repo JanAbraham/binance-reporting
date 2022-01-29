@@ -3,8 +3,6 @@
 .. moduleauthor:: Jan Abraham
 
 """
-from binance_download import *
-from binance_download import download_balances
 import binance_download
 import helpers
 

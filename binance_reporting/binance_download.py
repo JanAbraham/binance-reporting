@@ -1,9 +1,4 @@
 """Different functions for downloading and saving data from exchange.
-.. module:: binance_download
-   :platform: Unix, Windows
-   :synopsis: A useful module indeed.
-
-.. moduleauthor:: Jan Abraham <jan.abraham@bluewin.com>
 
 functions available for:
     - history of trades
@@ -77,7 +72,6 @@ else:
         level=log_level,
         format=log_format, datefmt=log_date_format, force = True
         )
-
 
 def download_balances(
     account_name: str,  # used to differentiate info in debug log
@@ -272,13 +266,7 @@ def download_daily_account_snapshots(
     ):
     """download daily account snapshots from exchange and write it into a csv file
 
-    .. module:: download_daily_account_snapshots
-    :platform: Unix, Windows
-    :synopsis: A useful module for downloading daily snapshots.
-
-    .. moduleauthor:: Jan Abraham <jan.abraham@bluewin.com>
-
-    **Procedure:
+    **Procedure:**
         - check if previous downloads exists, read them and determine the date of the last downloaded snapshot
         - walk through the assets of that day one-by-one to determine the close-price of that asset on the date of the snapshot
         - in case there is no price found: '0' value will be filled in
@@ -1112,7 +1100,7 @@ def download_prices(prices_file):
 def download_all():
     """downloading all account information from exchange
 
-    **this includes:
+    **this includes:**
         - balances
         - history of trades
         - history of orders

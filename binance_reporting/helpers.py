@@ -1,10 +1,3 @@
-"""Different functions for downloading and saving data from exchange.
-.. module:: helpers
-   :platform: Unix, Windows
-   :synopsis: A useful module indeed.
-
-.. moduleauthor:: Jan Abraham <jan.abraham@bluewin.com>
-"""
 import os       # find home directory
 import time     # sleep / cool-off
 import yaml     # read config file
@@ -14,8 +7,10 @@ import pandas as pd
 
 def read_config(config_dir, config_file_default, args):
     """read config from a given file and convert it into a dictionary
-
-    ** Procedure
+    Reading configuration data
+    --------------------------
+    
+    **Procedure**
         - check if there was a config file given
         - read the default config file into a dictionary
         - read additional config file if provided as argument
@@ -59,10 +54,10 @@ def read_config(config_dir, config_file_default, args):
 def get_trading_pairs(pattern):
     """get trading pairs from exchange which contain a given string (e.g. USDT)
 
-    **Goal
+    **Goal**
         - reduce the amount of trading pairs to walk through, e.g. when downloading historic trades
 
-    **Procedure
+    **Procedure**
         - get list of available trading pairs from exchange
         - filter the list according to pattern provided
 
@@ -99,10 +94,10 @@ def get_trading_pairs(pattern):
 def API_weight_check(client):
     """verify current payload of Binance API and trigger cool-off
 
-    **Goal
+    **Goal**
         - Avoiding errors while downloading data from binance.
 
-    **Procedure
+    **Procedure**
         - check what the current payload is
         - if 85% of max payload has been reached, cool-off is initiated
         - send a keepalive signal for the api connection
@@ -172,10 +167,10 @@ def API_weight_check(client):
 def API_close_connection(client):
     """close API connection of a given client
 
-    **Goal
+    **Goal**
         - Avoid having left-over connections to the API to keep the environment neat and clean.
 
-    **Procedure
+    **Procedure**
         - get listen key of client and close stream
 
     :param client: required
@@ -197,10 +192,10 @@ def API_close_connection(client):
 def file_remove_blanks(filename):
     """read csv file and remove blank lines
     
-    **Goal
+    **Goal**
         - Sometimes there are blank lines added to csv files when writing them in Windows.
 
-    **Procedure
+    **Procedure**
         - load provided file into panda dataframe
         - dropping all empty rows from the dataframe
         - writing file back
