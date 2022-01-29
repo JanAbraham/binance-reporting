@@ -29,12 +29,17 @@ author = 'Jan Abraham'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.imgmath',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.githubpages',
     'sphinx.ext.duration',
-    'sphinx.ext.doctest'
-]
+    'sphinx.ext.doctest']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+
+# The master toctree document.
+master_doc = 'index'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
