@@ -4,7 +4,7 @@ Welcome to python-binance-reporting v0.1
 
 Updated 28th Jan 2022
 
-This is an **unofficial** Python downloader for `Binance exchange REST API v3 <https://binance-docs.github.io/apidocs/spot/en>`_. I am in no way affiliated with Binance, use at your own risk.
+This is an **unofficial** Python downloader for `Binance exchange REST API v3 <https://binance-docs.github.io/apidocs/spot/en>`_. I am in no way affiliated with Binance. You can use it at your own risk.
 
 If you came here looking for the `Binance exchange <https://www.binance.com/?ref=10099792>`_ to purchase cryptocurrencies, then `go here <https://www.binance.com/?ref=10099792>`_.
 If you are having an account at Binance already and want to download all your trading information from Binance, you might find something useful below.

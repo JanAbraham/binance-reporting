@@ -1,8 +1,14 @@
-Getting Started
-===============
+Configuration in Detail
+=======================
 
-Installation
-------------
+Logging
+-------
+
+Modules
+-------
+
+
+
 
 ``python-binance-reporting`` is available on `PYPI <https://pypi.python.org/pypi/python-binance-reporting/>`_.
 Install with ``pip``:
