@@ -15,6 +15,8 @@ Source code
 Documentation
   https://python-binance-reporting.readthedocs.io/en/latest/
 
+Many thanks goes to SamyMcChardy for providing the python-binance package and keeps it up-to-date. I am using this package to connect seemless to the exchange.
+
 Features
 --------
 
@@ -22,14 +24,14 @@ Downloading of your data from Binance for
   - trading history
   - order history
   - open orders
-  - daily account snapshots for the last 180 days (limited to 180 days by Binance)
-  - withdrawal history
   - deposit history
+  - withdrawal history
+  - daily account snapshots for the last 180 days (limited to 180 days by Binance)
   - ad-hoc balance download
 
 One common issue when downloading the data are api payloads. This is being taken care of.
 Depending on your trading history with Binance, the first download might take some time to complete.
-Every following download is first checking for any existing data and only performs a differential download.
+Every following download is first checking for any previous data downloads and only performs a differential download.
 
 Quick Start
 -----------
