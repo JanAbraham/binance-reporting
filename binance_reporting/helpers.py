@@ -152,8 +152,8 @@ def API_weight_check(client):
                 if api_header in client.response.headers:
                     api_header_used = api_header
             logging.debug("api_header used after keep alive ping: " + api_header_used)
-        except:
-            logging.warning("API error. Trying again")
+        except Exception as e:
+            logging.warning("Exception occured: ", exc_info=True)
 
     logging.debug(
         "Check payload of API finished. Current Payload is "
@@ -182,8 +182,8 @@ def API_close_connection(client):
     logging.debug("closing API connection")
     try:
         client.stream_close(client.stream_get_listen_key())
-    except:
-        logging.warning("API error. Continuing.")
+    except Exception as e:
+        logging.warning("Exception occured: ", exc_info=True)
     logging.debug("API connection closed (if no error has been reported before)")
 
 

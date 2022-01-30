@@ -361,8 +361,8 @@ def download_daily_account_snapshots(
                     startTime=int(start_time_ms),
                     endTime=int(start_time_ms + step_ms))
             )
-        except:
-            logging.warning("API error. Trying again")
+        except Exception as e:
+            logging.warning("Exception occured: ", exc_info=True)
             continue
         snaps = pd.concat([snaps, snaps_new], ignore_index=True)
         logging.info(" . overall nbr of snapshots downloaded: %s.", str(len(snaps)))
@@ -627,8 +627,8 @@ def download_trades(
                 str(len(new_trades)))
             logging.debug("  ... be gentle with the API and wait for 1sec")
             time.sleep(1)
-        except:
-            logging.warning("API error. Trying again")
+        except Exception as e:
+            logging.warning("Exception occured: ", exc_info=True)
             continue
 
     logging.debug("Amount of new Trading Records to be written: %s", str(len(new_trades)))
@@ -709,8 +709,8 @@ def download_orders(
                 str(len(new_orders)))
             logging.debug("  ... be gentle with the API and wait for 1 sec")
             time.sleep(1)
-        except:
-            logging.warning("API error. Trying again")
+        except Exception as e:
+            logging.warning("Exception occured: ", exc_info=True)
             continue
 
     logging.debug("Amount of new Order Records to be written: %s", str(len(new_orders)))
