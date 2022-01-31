@@ -19,12 +19,12 @@ print(sys.path)
 
 # -- Project information -----------------------------------------------------
 
-project = 'python-binance-reporting'
+project = 'binance-reporting'
 copyright = '2022, Jan Abraham'
 author = 'Jan Abraham'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = '0.1.10'
 
 
 # -- General configuration ---------------------------------------------------

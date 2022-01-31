@@ -5,5 +5,5 @@ Technical Documentation of Modules
    :maxdepth: 4
 
    binance_reporting
-   helpers
+   helper
 
