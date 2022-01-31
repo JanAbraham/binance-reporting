@@ -5,7 +5,7 @@ import logging
 from binance.client import Client       # read trading pairs from exchange
 import pandas as pd
 
-def read_config(config_dir, config_file_default, args):
+def read_config(args):
     """read config from a given file and convert it into a dictionary
     
     **Procedure**
@@ -16,9 +16,6 @@ def read_config(config_dir, config_file_default, args):
         - change some path values in the dictionary
         - give the dictionary back as a result
 
-    :param config_dir: required
-    :type config_dir: str
-
     :param config_file: required
     :type config_file: str
 
@@ -28,18 +25,84 @@ def read_config(config_dir, config_file_default, args):
     :returns: dictionary with config info
 
     """
-    logging.info(' - Read configuration file. -')
-    config_file_default = config_dir + config_file_default
-    with open(config_file_default, 'r') as file:
-        config = yaml.safe_load(file)
+    logging.debug(' - Set default configuration. -')
 
-    if len(args) == 2 and os.path.isfile(config_dir + args[1]):
-        logging.debug('Differential config file found! Reading ...')
-        config_file_diff = config_dir + args[1]
-        with open(config_file_diff, 'r') as file:
-            config_diff = yaml.safe_load(file)
-        logging.debug('Updating config with differential config.')
-        config.update(config_diff)
+    config_default = {
+        "paths" : {
+            "home_dir" : '',
+            "data_dir" : '/binance data',
+            "balances_dir" : '/binance data/balances'},
+            "modules" : {
+                "download_balances": True,
+                "download_daily_account_snapshots": True,
+                "download_trades": True,
+                "download_orders": True,
+                "download_open_orders": True,
+                "download_deposits": True,
+                "download_withdrawals": True,
+                "balance_ticker": True,
+                "download_prices": True},
+            "accounts": {
+                "Account1": {
+                "dir": "dir1",
+                "type": "SPOT",
+                "osvar_api_public": "READ_PUBLIC_A1_SPOT",
+                "osvar_api_secret": "READ_SECRET_A1_SPOT",
+                "chat_pseudo": "A1",
+                "chat_id": '@A1',
+                "investment": 1000,
+                "cash": 0,
+                "portval": 0,
+                "profit": 0},
+                "Account2": {
+                "dir": "dir2",
+                "type": "FUTURES",
+                "osvar_api_public": "READ_PUBLIC_A2_FUTURES",
+                "osvar_api_secret": "READ_SECRET_A2_FUTURES",
+                "chat_pseudo": "A2",
+                "chat_id": '@S2',
+                "investment": 2000,
+                "cash": 0,
+                "portval": 0,
+                "profit": 0}},
+            "account_groups": {
+                "ALL": {
+                "accounts": ["Account1", "Account2"],
+                "chat_id": '@A3',
+                "chat_pseudo": "all"}},
+            "telegram": {
+                "token": "<telegram-token>"},
+            "logging": {
+                "log_activate": True,
+                "log_level": "INFO",
+                "log_target": "console",
+                "log_file" : "binance_reporting.log"},
+            "download_klines": {
+                "trading_pairs": 'USDT',
+                "kline_interval": ['5m', '1d']},
+            "download_daily_account_snapshots": {
+                "snapshot_days_max": 180,
+                "snapshot_days_per_request": 30}}
+
+    logging.info(' - Read configuration file. -')
+    
+    if len(args) == 2:
+        config_file = os.getcwd() + "/" + args[1]
+        if os.path.isfile(config_file):
+            logging.debug('Config file found! Reading ...')
+            config = config_default
+            with open(config_file, 'r') as file:
+                config_diff = yaml.safe_load(file)
+            logging.debug('Updating config with differential config.')
+            config.update(config_diff)
+            logging.debug('following configuration has been loaded: %s', config)
+    else:
+        if len(args) == 1:
+            logging.warning("No config file provided. Please provide a config file, which is in the same directory from where you start this module.")
+        if len(args) == 2:
+            logging.warning("No config file found: %s/%s", os.getcwd(), args[1])
+        config = 0
+        return config
 
     config['paths']['home_dir'] = os.path.expanduser("~")
     config['paths']['data_dir'] = config['paths']['home_dir'] + "/" + config['paths']['data_dir']

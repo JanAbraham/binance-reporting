@@ -13,9 +13,10 @@ Contents
 
    overview
    config
-   marketdata
    accountdata
+   marketdata
    modules
+   faq
    changelog
    license
 

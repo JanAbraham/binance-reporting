@@ -9,6 +9,8 @@ functions available for:
     - daily snapshots
     - send balances to telegram channel
 
+:raises SystemExit in case config file has not been provided.
+
 if it is called directly, it will download all mentioned above
 TODO re-work withdrawals equal to deposits (maybe merge them into one function 'transfers'? and create once csv file)
 TODO add docstrings to each function
@@ -25,22 +27,12 @@ import sys              # get arguments from calling the script
 import time
 import pandas as pd
 from binance.client import Client
-import helpers as hlp
+from binance_reporting import helpers as hlp
 import logging
 import telegram.ext     # sending balance information
 
-# basic settings for configuration
-config_dir = '../configs/'
-log_dir = '../logs/'
-config_file_default = 'config_default.yaml'
-
-# correct config, if py in debug mode
-if not os.path.isfile(config_dir + config_file_default):
-    config_dir = './configs/'
-    log_dir = './logs/'
-
 # basic settings for logging
-log_file = log_dir + "binance-reporting.log"
+log_file = "binance_reporting.log"
 log_level = 'DEBUG'
 log_target = 'file'
 log_format="%(asctime)s [%(levelname)s] - [%(filename)s > %(funcName)s() > %(lineno)s] - %(message)s"
@@ -55,10 +47,14 @@ logging.basicConfig(
 
 logging.info(" --- Binance-Download: Loading config ... ---")
 
-config = hlp.read_config(config_dir, config_file_default, sys.argv)
+config = hlp.read_config(sys.argv)
+
+if config == 0:
+    logging.info("Binance download aborted unsuccessful.")
+    sys.exit("no config found")
 
 log_level = config['logging']['log_level']
-log_file = log_dir + config['logging']['log_file']
+log_file = config['logging']['log_file']
 log_target = config['logging']['log_target']
 
 if log_target == 'file':
@@ -72,6 +68,8 @@ else:
         level=log_level,
         format=log_format, datefmt=log_date_format, force = True
         )
+
+logging.debug(" -- initializing CLI interface --")
 
 def download_balances(
     account_name: str,  # used to differentiate info in debug log
@@ -394,14 +392,19 @@ def download_daily_account_snapshots(
             symbol_shortlist = prices[prices["symbol"].isin(snap_balance["asset"] + "USDT")]
             logging.info(" . add USDT prices to %s assets from snapshot of %s", str(len(symbol_shortlist)), str(updatetime_utc))
             for symbol in symbol_shortlist["symbol"]:
-                kline = pd.DataFrame(
-                    client.get_historical_klines(
-                        symbol,
-                        Client.KLINE_INTERVAL_1DAY,
-                        updatetime_ms,
-                        updatetime_ms + daily_ms,
+                try:
+                    kline = pd.DataFrame(
+                        client.get_historical_klines(
+                            symbol,
+                            Client.KLINE_INTERVAL_1DAY,
+                            updatetime_ms,
+                            updatetime_ms + daily_ms,
+                            )
                         )
-                    )
+                except Exception as e:
+                    logging.warning(" . API connection lost. Trying to re-connect and re-try.")
+                    hlp.API_close_connection(client)
+                    hlp.API_weight_check(client)
                 logging.debug("downloading historic prices for %s. API payload: %s",
                     symbol,
                     str(hlp.API_weight_check(client))
@@ -1027,7 +1030,7 @@ def download_withdrawals(account_name, account_type, PUBLIC, SECRET, withdrawals
     return transactions
 
 
-def balance_ticker(accounts, account_groups, home_dir, telegram_token):
+def balance_ticker(accounts, account_groups, telegram_token):
     """ sending short balance status msg to telegram
     """
 
@@ -1112,15 +1115,14 @@ def download_all():
 
     logging.info(" --- Downloading all account information from Exchange ---")
 
-    home_dir = config['paths']['home_dir']
-    data_dir = config['paths']['data_dir']
+    data_dir = os.getcwd()
     telegram_token = config['telegram']['token']
 
     accounts = config['accounts']
     account_groups = config['account_groups']
 
     if config['modules']['balance_ticker']:
-        balance_ticker(accounts, account_groups, home_dir, telegram_token)
+        balance_ticker(accounts, account_groups, telegram_token)
 
     list_of_trading_pairs = hlp.get_trading_pairs('USDT')
 
@@ -1132,6 +1134,8 @@ def download_all():
         SECRET = os.environ.get(account_details['osvar_api_secret'])
 
         file_directory = data_dir + "/" + account_details['dir'] + "/"
+        if not os.path.exists(file_directory):
+            os.makedirs(file_directory)
         open_orders_file = file_directory + "open_orders_" + account + ".csv"
         orders_file = file_directory + "orders_" + account + ".csv"
         trades_file = file_directory + "trades_" + account + ".csv"

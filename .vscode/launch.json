@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["config_test with VS.yaml"]
+            "args": ["config_jan.yaml"]
         },
         {
             "name": "Python: Current File",

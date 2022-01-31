@@ -50,11 +50,14 @@ For more `check out the documentation <https://python-binance-reporting.readthed
 Donate
 ------
 
-If this library helped you out feel free to donate.
+If this library helped you out, feel free to donate.
 
-- XRP:
-- ETH: 
-- BTC: 
+BTC, ETH, BNB, ADA, USDT, USDC:
+  - Binance Smart Chain / BEP20 Network: 0x4c2c124cf608f6002606c43287915937dae02c50
+XRP:
+  - Ripple Network: rEb8TK3gBgk5auZkwc6sHnwrGVJH8DuaLh / MEMO: 101430969
+TRX:
+  - TRON / TRX20 Network: TH14B1PT6bPfz2RF5C1hiP2G62438v113r
 
 Contribute
 ----------

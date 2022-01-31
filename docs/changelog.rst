@@ -3,6 +3,11 @@ Changelog and Outlook
 
 v0.x.x - work in progress
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+enhancements
+  - change to CLI mode
+
+
 **in pipeline**
     - klines downloader
 
