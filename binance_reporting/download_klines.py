@@ -33,8 +33,8 @@ TODO sub-function for adding technical indicators to all files in a folder
 import os #used to find home directory for saving the files in dropbox
 from binance import Client
 import pandas as pd
-from finta import TA
-import helpers as hlp # API weight check function
+from finta import TA        # for technical indicators
+from binance_reporting import helper as hlp    # API weight check function
 import logging
 
 # customizable variables

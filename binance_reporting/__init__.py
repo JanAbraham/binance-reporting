@@ -2,7 +2,6 @@
 
 .. moduleauthor:: Jan Abraham
 
-import binance_reporting
-import helpers
-
 """
+from binance_reporting import downloader
+from binance_reporting import helper

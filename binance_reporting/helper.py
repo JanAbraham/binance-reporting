@@ -1,4 +1,4 @@
-import os       # find home directory
+import os       # file & dir ops
 import time     # sleep / cool-off
 import yaml     # read config file
 import logging
@@ -28,63 +28,60 @@ def read_config(args):
     logging.debug(' - Set default configuration. -')
 
     config_default = {
-        "paths" : {
-            "home_dir" : '',
-            "data_dir" : '/binance data',
-            "balances_dir" : '/binance data/balances'},
-            "modules" : {
-                "download_balances": True,
-                "download_daily_account_snapshots": True,
-                "download_trades": True,
-                "download_orders": True,
-                "download_open_orders": True,
-                "download_deposits": True,
-                "download_withdrawals": True,
-                "balance_ticker": True,
-                "download_prices": True},
-            "accounts": {
-                "Account1": {
-                "dir": "dir1",
-                "type": "SPOT",
-                "osvar_api_public": "READ_PUBLIC_A1_SPOT",
-                "osvar_api_secret": "READ_SECRET_A1_SPOT",
-                "chat_pseudo": "A1",
-                "chat_id": '@A1',
-                "investment": 1000,
-                "cash": 0,
-                "portval": 0,
-                "profit": 0},
-                "Account2": {
-                "dir": "dir2",
-                "type": "FUTURES",
-                "osvar_api_public": "READ_PUBLIC_A2_FUTURES",
-                "osvar_api_secret": "READ_SECRET_A2_FUTURES",
-                "chat_pseudo": "A2",
-                "chat_id": '@S2',
-                "investment": 2000,
-                "cash": 0,
-                "portval": 0,
-                "profit": 0}},
-            "account_groups": {
-                "ALL": {
-                "accounts": ["Account1", "Account2"],
-                "chat_id": '@A3',
-                "chat_pseudo": "all"}},
-            "telegram": {
-                "token": "<telegram-token>"},
-            "logging": {
-                "log_activate": True,
-                "log_level": "INFO",
-                "log_target": "console",
-                "log_file" : "binance_reporting.log"},
-            "download_klines": {
-                "trading_pairs": 'USDT',
-                "kline_interval": ['5m', '1d']},
-            "download_daily_account_snapshots": {
-                "snapshot_days_max": 180,
-                "snapshot_days_per_request": 30}}
+        "modules" : {
+            "download_balances": True,
+            "download_daily_account_snapshots": True,
+            "download_trades": True,
+            "download_orders": True,
+            "download_open_orders": True,
+            "download_deposits": True,
+            "download_withdrawals": True,
+            "balance_ticker": True,
+            "download_prices": True},
+        "accounts": {
+            "Account1": {
+            "dir": "dir1",
+            "type": "SPOT",
+            "osvar_api_public": "READ_PUBLIC_A1_SPOT",
+            "osvar_api_secret": "READ_SECRET_A1_SPOT",
+            "chat_pseudo": "A1",
+            "chat_id": '@A1',
+            "investment": 1000,
+            "cash": 0,
+            "portval": 0,
+            "profit": 0},
+            "Account2": {
+            "dir": "dir2",
+            "type": "FUTURES",
+            "osvar_api_public": "READ_PUBLIC_A2_FUTURES",
+            "osvar_api_secret": "READ_SECRET_A2_FUTURES",
+            "chat_pseudo": "A2",
+            "chat_id": '@S2',
+            "investment": 2000,
+            "cash": 0,
+            "portval": 0,
+            "profit": 0}},
+        "account_groups": {
+            "ALL": {
+            "accounts": ["Account1", "Account2"],
+            "chat_id": '@A3',
+            "chat_pseudo": "all"}},
+        "telegram": {
+            "token": "<telegram-token>"},
+        "logging": {
+            "log_activate": True,
+            "log_level": "INFO",
+            "log_target": "console",
+            "log_file" : "binance_reporting.log"},
+        "download_klines": {
+            "trading_pairs": 'USDT',
+            "kline_interval": ['5m', '1d']},
+        "download_daily_account_snapshots": {
+            "snapshot_days_max": 180,
+            "snapshot_days_per_request": 30}}
 
     logging.info(' - Read configuration file. -')
+    config = 0
     
     if len(args) == 2:
         config_file = os.getcwd() + "/" + args[1]
@@ -103,10 +100,6 @@ def read_config(args):
             logging.warning("No config file found: %s/%s", os.getcwd(), args[1])
         config = 0
         return config
-
-    config['paths']['home_dir'] = os.path.expanduser("~")
-    config['paths']['data_dir'] = config['paths']['home_dir'] + "/" + config['paths']['data_dir']
-    config['paths']['balances_dir'] = config['paths']['data_dir'] + "/" + config['paths']['balances_dir']
 
     logging.info(' - Finished reading configuration. -')
     return config

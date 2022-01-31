@@ -27,7 +27,8 @@ import sys              # get arguments from calling the script
 import time
 import pandas as pd
 from binance.client import Client
-from binance_reporting import helpers as hlp
+import helper as hlp
+# from binance_reporting import helper as hlp
 import logging
 import telegram.ext     # sending balance information
 

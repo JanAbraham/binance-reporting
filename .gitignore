@@ -160,6 +160,6 @@ logs/
 scripts/
 test/
 configs/*
-!config_default_template.yaml
+!config_template.yaml
 config_new/
 config/
