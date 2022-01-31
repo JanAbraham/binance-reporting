@@ -21,58 +21,15 @@ TODO remove error messages about 'returning a view vesus a copy
 TODO incorporate kline downloads into binance_download.py
 TODO balances: add average entry price of open orders for locked assets + estimated exit value
 """
-
 import os               # set home directory of current user depending on OS
 import sys              # get arguments from calling the script
 import time
 import pandas as pd
 from binance.client import Client
-import helper as hlp
-# from binance_reporting import helper as hlp
+from binance_reporting import helper as hlp
 import logging
-import telegram.ext     # sending balance information
 
-# basic settings for logging
-log_file = "binance_reporting.log"
-log_level = 'DEBUG'
-log_target = 'file'
-log_format="%(asctime)s [%(levelname)s] - [%(filename)s > %(funcName)s() > %(lineno)s] - %(message)s"
-log_date_format = "%Y-%m-%d %H:%M:%S"
-
-# reset logging to the right config as in config file
-logging.basicConfig(
-    level=log_level,
-    filename=log_file,
-    format=log_format, datefmt=log_date_format
-    )
-
-logging.info(" --- Binance-Download: Loading config ... ---")
-
-config = hlp.read_config(sys.argv)
-
-if config == 0:
-    logging.info("Binance download aborted unsuccessful.")
-    sys.exit("no config found")
-
-log_level = config['logging']['log_level']
-log_file = config['logging']['log_file']
-log_target = config['logging']['log_target']
-
-if log_target == 'file':
-    logging.basicConfig(
-        level=log_level,
-        filename=log_file,
-        format=log_format, datefmt=log_date_format, force = True
-        )
-else:
-    logging.basicConfig(
-        level=log_level,
-        format=log_format, datefmt=log_date_format, force = True
-        )
-
-logging.debug(" -- initializing CLI interface --")
-
-def download_balances(
+def balances(
     account_name: str,  # used to differentiate info in debug log
     account_type: str,
     PUBLIC: str,
@@ -254,7 +211,7 @@ def download_balances(
     return result
 
 
-def download_daily_account_snapshots(
+def daily_account_snapshots(
     account_name,
     account_type,
     PUBLIC,
@@ -573,7 +530,7 @@ def download_daily_account_snapshots(
     logging.info(" - Finished writing daily snapshots for account: %s -", account_name)
 
 
-def download_trades(
+def trades(
     account_name, account_type, PUBLIC, SECRET, list_of_trading_pairs, trades_file
     ):
     #
@@ -656,7 +613,7 @@ def download_trades(
         account_name)
 
 
-def download_orders(
+def orders(
     account_name, account_type, PUBLIC, SECRET, list_of_trading_pairs, orders_file
     ):
 
@@ -737,7 +694,7 @@ def download_orders(
         str(len(new_orders)), account_name)
 
 
-def download_open_orders(account_name, account_type, PUBLIC, SECRET, open_orders_file):
+def open_orders(account_name, account_type, PUBLIC, SECRET, open_orders_file):
     #
     # read open orders and write them into a csv file
     #
@@ -766,7 +723,7 @@ def download_open_orders(account_name, account_type, PUBLIC, SECRET, open_orders
     logging.info(" - finished writing open orders to csv for account: %s -", account_name)
 
 
-def download_deposits(account_name, account_type, PUBLIC, SECRET, deposits_file):
+def deposits(account_name, account_type, PUBLIC, SECRET, deposits_file):
     """download account deposits from exchange and write it into a csv file
 
     In order to reduce load on the API, the function verifies if a csv-
@@ -891,7 +848,7 @@ def download_deposits(account_name, account_type, PUBLIC, SECRET, deposits_file)
     return deposits
 
 
-def download_withdrawals(account_name, account_type, PUBLIC, SECRET, withdrawals_file):
+def withdrawals(account_name, account_type, PUBLIC, SECRET, withdrawals_file):
     """download account withdrawals from exchange and write it into a csv file
 
     In order to reduce load on the API, the function verifies if a csv-
@@ -1031,61 +988,7 @@ def download_withdrawals(account_name, account_type, PUBLIC, SECRET, withdrawals
     return transactions
 
 
-def balance_ticker(accounts, account_groups, telegram_token):
-    """ sending short balance status msg to telegram
-    """
-
-    logging.info(' - Sending balance tickers to telegram channels. -')
-    for account in accounts:
-
-        account_details = accounts[account]
-        PUBLIC = os.environ.get(account_details['osvar_api_public'])
-        SECRET = os.environ.get(account_details['osvar_api_secret'])
-
-        balance = download_balances(account, account_details['type'], PUBLIC, SECRET)
-
-        account_details['cash'] = round(balance['cash'], 1)
-        account_details['portval'] = round(balance['portval'], 1)
-        account_details['profit'] = round((balance['portval'] - account_details['investment']) / account_details['investment']*100, 2) if account_details['investment'] != 0 else 0
-
-        strCash = 'C=' + str(account_details['cash'])
-        strPortVal = 'B=' + str(account_details['portval'])
-        strProfit = 'P=' + str(account_details['profit']) + '%'
-
-        bot = telegram.Bot(token = telegram_token)
-        bot_text = (strCash + ' ' + strPortVal + ' ' + strProfit + ' ' + account_details['chat_pseudo']).lower()
-        bot.send_message(chat_id = account_details['chat_id'], text = bot_text)
-
-    logging.info(' - Finished sending tickers for all listed accounts! -')
-
-    logging.info(' - Looping through different account groups and sending ticker messages to telegram for every group -')
-
-    for account_group in account_groups:
-        account_group = account_groups[account_group]
-        chat_id = account_group['chat_id']
-        chat_pseudo = account_group['chat_pseudo']
-        investment = 0
-        cash = 0
-        portval = 0
-
-        # get details for every account and sum them up
-        for account in account_group['accounts']:
-            account_details = accounts[account]
-            investment = investment + account_details['investment']
-            cash = cash + account_details['cash']
-            portval = portval + account_details['portval']
-
-        strCash = 'C=' + str(round(cash, 0))
-        strPortVal = 'B=' + str(round(portval, 0))
-        strProfit = 'P=' + str(round((portval - investment) / investment * 100, 1)) + '%'
-
-        bot_text = (strCash + ' ' + strPortVal + ' ' + strProfit + ' ' + chat_pseudo).lower()
-        bot.send_message(chat_id = chat_id, text = bot_text)
-
-    logging.info(' - Finished sending Tickers to groups -')
-
-
-def download_prices(prices_file):
+def prices(prices_file):
     #
     # read prices for all trading pairs and write them to prices.csv file
     #
@@ -1099,171 +1002,3 @@ def download_prices(prices_file):
     logging.debug("writing prices to csv ...")
     prices.to_csv(prices_file, index=False)
     logging.info(" - Finished writing Prices to csv! -")
-
-
-def download_all():
-    """downloading all account information from exchange
-
-    **this includes:**
-        - balances
-        - history of trades
-        - history of orders
-        - open orders
-        - deposits
-        - withdrawals
-        - daily snapshots
-    """
-
-    logging.info(" --- Downloading all account information from Exchange ---")
-
-    data_dir = os.getcwd()
-    telegram_token = config['telegram']['token']
-
-    accounts = config['accounts']
-    account_groups = config['account_groups']
-
-    if config['modules']['balance_ticker']:
-        balance_ticker(accounts, account_groups, telegram_token)
-
-    list_of_trading_pairs = hlp.get_trading_pairs('USDT')
-
-    for account in accounts:
-        logging.info(" -- start downloading data for account %s --", account)
-
-        account_details = accounts[account]
-        PUBLIC = os.environ.get(account_details['osvar_api_public'])
-        SECRET = os.environ.get(account_details['osvar_api_secret'])
-
-        file_directory = data_dir + "/" + account_details['dir'] + "/"
-        if not os.path.exists(file_directory):
-            os.makedirs(file_directory)
-        open_orders_file = file_directory + "open_orders_" + account + ".csv"
-        orders_file = file_directory + "orders_" + account + ".csv"
-        trades_file = file_directory + "trades_" + account + ".csv"
-        balances_file = file_directory + "balances_" + account + ".csv"
-        bal_fut_positions_file = file_directory + "balances_" + account + "_positions.csv"
-        bal_fut_assets_file = file_directory + "balances_" + account + "_assets.csv"
-        prices_file = file_directory + "prices.csv"
-        deposits_file = file_directory + "deposits_" + account + ".csv"
-        withdrawals_file = file_directory + "withdrawals_" + account + ".csv"
-        snapshots_balances_file = (file_directory + "snapshot_daily_" + account + "_balances.csv")
-        snapshots_assets_file = (file_directory + "snapshot_daily_" + account + "_assets.csv")
-        snapshots_positions_file = (file_directory + "snapshot_daily_" + account + "_positions.csv")
-
-        writetype = "w"
-
-        modules = config['modules']
-
-        if modules['download_balances']: 
-            download_balances(
-                account, account_details['type'], PUBLIC, SECRET, balances_file, bal_fut_positions_file, bal_fut_assets_file, writetype)
-
-        if modules['download_trades']:
-            download_trades(
-                account, account_details['type'], PUBLIC, SECRET, list_of_trading_pairs, trades_file)
-
-        if modules['download_orders']:
-            download_orders(account, account_details['type'], PUBLIC, SECRET, list_of_trading_pairs, orders_file)
-
-        if modules['download_open_orders']:
-            download_open_orders(account, account_details['type'], PUBLIC, SECRET, open_orders_file)
-
-        if modules['download_deposits']:
-            download_deposits(account, account_details['type'], PUBLIC, SECRET, deposits_file)
-
-        if modules['download_withdrawals']:
-            download_withdrawals(account, account_details['type'], PUBLIC, SECRET, withdrawals_file)
-
-        if modules['download_daily_account_snapshots']:
-            download_daily_account_snapshots(
-                account,
-                account_details['type'],
-                PUBLIC,
-                SECRET,
-                snapshots_balances_file,
-                snapshots_positions_file,
-                snapshots_assets_file
-            )
-
-        if modules['download_prices']:
-            download_prices(prices_file)
-
-        logging.info(" -- Finished downloading all data for account %s --", account)
-
-    if modules['download_daily_account_snapshots']:
-        logging.info(" -- Merging snapshot files from different accounts. --")
-        targetfile = (data_dir + "/snapshots_daily_all_accounts.csv")
-        sourcefiles = []
-        for account in accounts:
-            account_details = accounts[account]
-            file_directory = data_dir + "/" + account_details['dir'] + "/"
-            filename = (
-                file_directory
-                + "snapshot_daily_"
-                + account
-                + "_balances"
-                + ".csv"
-            )
-            sourcefiles.append(filename)
-        hlp.merge_files(sourcefiles, targetfile)
-        logging.info(" -- Merging snapshot files finished. --")
-
-    if modules['download_balances']:
-        logging.info(" -- Merging balances files from different accounts. --")            
-        targetfile = (data_dir + "/balances_all_accounts.csv")
-        sourcefiles = []
-        for account in accounts:
-            account_details = accounts[account]
-            file_directory = data_dir + "/" + account_details['dir'] + "/"
-            filename = (
-                file_directory
-                + "balances_"
-                + account
-                + ".csv"
-            )
-            sourcefiles.append(filename)
-        hlp.merge_files(sourcefiles, targetfile)
-        logging.info(" -- Merging snapshot files finished. --")
-    
-    if modules['download_deposits']:
-        logging.info(" -- Merging deposit files from different accounts. --")            
-        targetfile = (data_dir + "/deposits_all_accounts.csv")
-        sourcefiles = []
-        for account in accounts:
-            account_details = accounts[account]
-            file_directory = data_dir + "/" + account_details['dir'] + "/"
-            filename = (
-                file_directory
-                + "deposits_"
-                + account
-                + ".csv"
-            )
-            sourcefiles.append(filename)
-        hlp.merge_files(sourcefiles, targetfile)
-        sourcefiles = [data_dir + '/deposits_all_accounts.csv', data_dir + '/withdrawals_all_accounts.csv']
-        targetfile = data_dir + "/transfers_all_accounts.csv"
-        hlp.merge_files(sourcefiles, targetfile)
-        logging.info(" -- Merging deposit files finished. --")
-
-    if modules['download_withdrawals']:
-        logging.info(" -- Merging withdrawal files from different accounts. --")            
-        targetfile = (data_dir + "/withdrawals_all_accounts.csv")
-        sourcefiles = []
-        for account in accounts:
-            account_details = accounts[account]
-            file_directory = data_dir + "/" + account_details['dir'] + "/"
-            filename = (
-                file_directory
-                + "withdrawals_"
-                + account
-                + ".csv"
-            )
-            sourcefiles.append(filename)
-        hlp.merge_files(sourcefiles, targetfile)
-        sourcefiles = [data_dir + '/deposits_all_accounts.csv', data_dir + '/withdrawals_all_accounts.csv']
-        targetfile = data_dir + "/transfers_all_accounts.csv"
-        hlp.merge_files(sourcefiles, targetfile)
-        logging.info(" -- Merging withdrawal files finished. --")
-
-if __name__ == "__main__":
-    download_all()

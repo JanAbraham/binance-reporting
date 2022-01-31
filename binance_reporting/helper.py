@@ -95,7 +95,7 @@ def read_config(args):
             logging.debug('following configuration has been loaded: %s', config)
     else:
         if len(args) == 1:
-            logging.warning("No config file provided. Please provide a config file, which is in the same directory from where you start this module.")
+            logging.warning("No config file provided. Please provide a config file, which is in the same directory from where you started this.")
         if len(args) == 2:
             logging.warning("No config file found: %s/%s", os.getcwd(), args[1])
         config = 0

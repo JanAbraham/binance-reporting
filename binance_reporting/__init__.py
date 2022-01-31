@@ -1,7 +1,8 @@
-"""A downloader for your data on binance.
+"""A reporting library for your data on binance.
 
 .. moduleauthor:: Jan Abraham
 
 """
-from binance_reporting import downloader
-from binance_reporting import helper
+from .downloader import *
+from .helper import *
+from .ticker import *
