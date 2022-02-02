@@ -2,7 +2,7 @@
 Welcome to binance-reporting v0.1.0
 ===================================
 
-Updated 28th Jan 2022
+Updated 31st Jan 2022
 
 This is an **unofficial** Python downloader for `Binance exchange REST API v3 <https://binance-docs.github.io/apidocs/spot/en>`_. I am in no way affiliated with Binance. You can use it at your own risk.
 
@@ -31,7 +31,7 @@ Downloading of your data from Binance for
 
 One common issue when downloading the data are api payloads. This is being taken care of.
 Depending on your trading history with Binance, the first download might take some time to complete.
-Every following download is first checking for any previous data downloads and only performs a differential download.
+Every download attempt is first checking for previous data downloads and only performs a differential download.
 
 Quick Start
 -----------
@@ -40,24 +40,22 @@ Quick Start
 
 `Generate an API Key <https://www.binance.com/en/my/settings/api-management>`_ and assign relevant permissions.
 
+Package can be installed via pip from PYPI.org
+
 .. code:: bash
 
-    pip install python-binance-reporting
+    pip install binance-reporting
+    
+The script is controlled by a yaml config file. An example is in the chapter configuration.
 
+Starting the download
+
+.. code:: bash
+
+    python -m binance_reporting.start config.yaml
 
 For more `check out the documentation <https://binance-reporting.readthedocs.io/en/latest/>`_.
 
-Donate
-------
-
-If this library helped you out, feel free to donate.
-
-BTC, ETH, BNB, ADA, USDT, USDC:
-  - Binance Smart Chain / BEP20 Network: 0x4c2c124cf608f6002606c43287915937dae02c50
-XRP:
-  - Ripple Network: rEb8TK3gBgk5auZkwc6sHnwrGVJH8DuaLh / MEMO: 101430969
-TRX:
-  - TRON / TRX20 Network: TH14B1PT6bPfz2RF5C1hiP2G62438v113r
 
 Contribute
 ----------
@@ -68,11 +66,26 @@ If you like to contribute or have an idea for improvements / enhancements, pleas
 
 Please be informed, that I am only working sporadically on this project. I apologize already for longer response times.
 
+
 Support
 -------
 
 If you are having issues, please open an item here:
   - Issue Tracker: https://github.com/JanAbraham/binance-reporting/issues
+
+
+Donate
+------
+
+If this library helped you out, feel free to donate.
+
+XRP: rEb8TK3gBgk5auZkwc6sHnwrGVJH8DuaLh / MEMO: 101430969
+  - (Ripple Network)
+TRX: TH14B1PT6bPfz2RF5C1hiP2G62438v113r
+  - (TRON / TRX20 Network)
+BTC, ETH, BNB, ADA, USDT, USDC: 0x4c2c124cf608f6002606c43287915937dae02c50
+  - (Binance Smart Chain / BEP20 Network)
+
 
 License
 -------
