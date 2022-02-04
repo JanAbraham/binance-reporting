@@ -1,5 +1,5 @@
 import os       # file & dir ops
-import time     # sleep / cool-off
+import time     # sleep for API cool-off
 import yaml     # read config file
 import logging
 from binance.client import Client       # read trading pairs from exchange
@@ -105,8 +105,8 @@ def read_config(args):
     return config
 
 
-def get_trading_pairs(pattern):
-    """get trading pairs from exchange which contain a given string (e.g. USDT)
+def get_symbols(patterns:list = ['']):
+    """get trading symbols from exchange which contain a given string (e.g. USDT)
 
     **Goal**
         - reduce the amount of trading pairs to walk through, e.g. when downloading historic trades
@@ -115,8 +115,13 @@ def get_trading_pairs(pattern):
         - get list of available trading pairs from exchange
         - filter the list according to pattern provided
 
+    **Parameters**
+        - no parameter = get all trading pairs
+        - a string = trading pairs, which contain this string
+        - a list of strings = trading pairs, which contain any of the strings in the list
+
     :param pattern: required (if empty, all trading pairs will be returned)
-    :type pattern: str
+    :type pattern: str or list
 
     :returns: list of filtered trading pairs available on exchange
 
@@ -124,25 +129,30 @@ def get_trading_pairs(pattern):
 
     logging.debug("get list of Trading Pairs to download data about ...")
     client = Client()
+    symbols_list = []
 
-    # get all symbols from the exchange and sort them alphabetically
-    list_of_trading_pairs = pd.DataFrame(client.get_all_tickers()).loc[:, ["symbol"]]
+    # in case a string is given, change it into a list
+    if type(patterns) == str:
+        patterns = [patterns]
 
-    # filter out USDT pairs
-    # take this part out in case other trading pairs should be downloaded too
-    list_of_trading_pairs = list_of_trading_pairs[
-        list_of_trading_pairs.symbol.str.contains(pattern)]
+    # get all symbols from the exchange
+    symbols_all = pd.DataFrame(client.get_all_tickers()).loc[:, ["symbol"]]
 
-    list_of_trading_pairs.sort_values(by=["symbol"], inplace=True)
-    
-    list_of_trading_pairs = list_of_trading_pairs["symbol"].values.tolist()
+    # filter out pairs which are in the list of patterns
+    for pattern in patterns:
+        symbols = symbols_all[
+            symbols_all.symbol.str.contains(pattern)]
+        symbols = symbols["symbol"].values.tolist()
+        symbols_list.extend(symbols)
+
+    # remove duplicates & sort
+    symbols_list = list(dict.fromkeys(symbols_list))
+    symbols_list.sort()
 
     logging.debug(
-        "Amount of Trading Pairs available on exchange: "
-        + str(len(list_of_trading_pairs)))
+        "Amount of Symbols with provided patterns available on exchange: %s", str(len(symbols_list)))
 
-
-    return list_of_trading_pairs
+    return symbols_list
 
 
 def API_weight_check(client):
@@ -265,6 +275,7 @@ def file_remove_blanks(filename):
     data.to_csv(filename, header=True)
     logging.info(" - blank rows removed from %s", filename)
 
+
 def merge_files(sourcefiles: list, targetfile: str):
     data = pd.DataFrame()
     data_new = pd.DataFrame()
@@ -274,3 +285,34 @@ def merge_files(sourcefiles: list, targetfile: str):
             data = pd.concat([data, data_new])
             #data = data.append(data_new, ignore_index=True)
     data.to_csv(targetfile, index=False)
+
+
+def klines_merge(klines_dir_src : str, klines_dir_trgt : str, filename_trgt : str):
+    """merging all klines files of a given directory into one file
+    
+    """
+    logging.info("--- START --- Merging klines into one file ---")
+
+    files = os.listdir(klines_dir_src)
+    klines = pd.DataFrame()
+    writemode = 'a'
+
+    for f in files:
+        if os.path.isfile(klines_dir_trgt + filename_trgt):
+            writemode = 'a'
+            headermode = False
+        else:
+            writemode = 'w'
+            headermode = True
+        logging.debug("..... adding filename: " + f)
+        klines = pd.read_csv(klines_dir_src + "/" + f, skip_blank_lines=True, header=0 , usecols=[0,1,2,3,4,5], engine='python')
+        klines['pair'] = f[f.rfind('_')+1:f.rfind('.')]
+        logging.debug("... writing file ...")
+        klines.to_csv(klines_dir_trgt + "/" + filename_trgt, header = headermode, index=False, mode = writemode)
+        logging.debug("..... finished adding filename: " + f)
+    logging.info("..... removing duplicates in target file, sort it and write ---")
+    klines = pd.read_csv(klines_dir_trgt + "/" + filename_trgt)
+    klines.drop_duplicates(subset=["open time", "pair"], keep="last", inplace=True)
+    klines.sort_values(by=["pair", "open time"], inplace=True)
+    klines.to_csv(klines_dir_trgt + "/" + filename_trgt, header = True, index = False, mode = 'w')
+    logging.info("--- FINISHED --- Merging klines into one file ---")
