@@ -1,3 +1,14 @@
+"""helper modules for binance-reporting library
+
+**Modules available**
+    - read configuration file (yaml)
+    - get symbols from exchange
+    - API weight check and cool down if overheated
+    - API close connection
+    - removing blank lines in csv files
+    - merging multiple files into one file
+    - merging all files in a directory into one file
+"""
 import os       # file & dir ops
 import time     # sleep for API cool-off
 import yaml     # read config file
