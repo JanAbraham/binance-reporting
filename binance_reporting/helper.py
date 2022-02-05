@@ -312,7 +312,7 @@ def klines_merge(klines_dir_src : str, klines_dir_trgt : str, filename_trgt : st
     writemode = 'a'
 
     for f in files:
-        if os.path.isfile(klines_dir_trgt + filename_trgt):
+        if os.path.isfile(klines_dir_trgt + "/" + filename_trgt):
             writemode = 'a'
             headermode = False
         else:
