@@ -10,10 +10,10 @@ If you came here looking for the `Binance exchange <https://www.binance.com/?ref
 If you are having an account at Binance already and want to download all your trading information from Binance, you ended up at the right place.
 
 Source code
-  https://github.com/JanAbraham/python-binance-reporting
+  https://github.com/JanAbraham/binance-reporting
 
 Documentation
-  https://python-binance-reporting.readthedocs.io/en/latest/
+  https://binance-reporting.readthedocs.io/en/latest/
 
 Many thanks goes to @sammchardy for providing the python-binance package and keeps it up-to-date. I am using this package to connect seemless to the exchange.
 
