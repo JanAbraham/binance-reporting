@@ -6,11 +6,16 @@ Configuration
 - In general, the downloads are saved in csv files. These are stored in sub-directory from where the script has been started. The configuration file needs to be located in this very same directory as well.
 - You can as well create different configuration files for a sub-set of the modules. This is often used when there are scheduled tasks, e.g. a daily task for downloading kline history and an hourly task for downloading account balances.
 
+A minimum configuration file must have the sections *modules* and *accounts*.
+
+Minimum Configuration
+=====================
+
 Modules
 -------
-The binance-reporting library has plenty of modules, which can be executed separately. 
+The binance-reporting library has plenty of modules, which can be executed separately or all together in one run.
 
-Following modules can be activated:
+Following modules are currently available:
 
 .. code-block:: yaml
 
@@ -42,7 +47,54 @@ Following modules can be activated:
 
 Accounts
 --------
-For which accounts should the data be downloaded for?
+This section is critical for downloading account specific information from the exchange. Most important are the PUBLIC & SECRET to make a connection to the exchange.
+
+.. note::Please ensure that your API keys only have read access. No trading or transfer permissions are needed.
+
+This library requires you to save the API keys as environment variables in your local environment. Please dont provide the API keys themselves, but only add the names of the environment variables into the config file.
+
+.. code-block:: yaml
+
+    # provide account details to access binance
+    # the below entries is only an example and need to be changed with your own data
+    accounts:
+        # provide a name for your account
+        <name1>:
+            # the following 4 values are mandatory
+            # name of a sub-directory where the csv files related to this account are saved
+            # it is a sub-directory from where this script is run
+            # in case you run this via scheduler, make sure you change to the right directory
+            dir: <dir-name-1>
+            # type of account: SPOT or FUTURES
+            type: SPOT or FUTURES
+            # PUBLIC/SECRET key combination for accessing the API of the exchange and pulling your information
+            # the actual key needs to be stored as an environment variable on your local machine
+            # the name of the environment variable is given below
+            osvar_api_public: <env variable for PUBLIC key account1>
+            osvar_api_secret: <env variable for SECRET key account1>
+            # following parameters are optional and only needed when activating the ticker module
+            chat_pseudo: <chat-pseudo> # provide any text, which is used to identify the different msg on telegram
+            chat_id: '@<chat-id of your telegram channel>'
+            # following values are for calculating the PnL of your account in the telegram ticker message
+            investment: 0
+            cash: 0
+            # portval = overall value of the porfolio; this is used as a basis to calculate the profit
+            portval: 0
+            profit: 0
+        <name2>:
+            dir: <dir-name-2>
+            type: SPOT or FUTURES
+            osvar_api_public: <env variable for PUBLIC key account2>
+            osvar_api_secret: <env variable for SECRET key account2>
+            chat_pseudo: <chat-pseudo>
+            chat_id: '@<chat-id of your telegram channel>'
+            investment: 0
+            cash: 0
+            portval: 0
+            profit: 0
+
+Extented Configuration
+======================
 
 Klines
 ------
@@ -65,6 +117,42 @@ There is a module to download history information from the exchange.
         # trading pairs, which have USDT included, e.g. BTCUSDT, ADAUSDT etc
         # you can as well provide several items, like ['USDT', 'USDC', 'BTC']
         symbols: ['USDT']
+
+Telegram ticker
+---------------
+You can send a short message to a pubic telegram channel. To do this, following information is needed in the configuration file. To ensure proper calculation of values, you need to provide the values in the accounts module.
+
+.. code-block:: yaml
+
+    # in case the module 'ticker' is set to 'yes', this section is needed to configure telegram
+    telegram:
+        # used for pushing notifications to Telegram
+        # make sure the provided token has access to the telegram channel you want to send the message to
+        # the telegram channel needs to be public
+        token: <token>
+
+    # in case the module 'ticker' is set to 'yes', this section can be used to bundle different accounts
+    # and send a summary of these accounts to a telegram channel
+    # the below entries are only an example and need to be changed with your own data
+    account_groups:
+        # multiple account groups can be defined
+        ALL:
+            # list all the accounts which are part of this group
+            accounts: [<name1>, <name2>]
+            chat_id: '@<chat-id of your telegram channel>'
+            chat_pseudo: all
+        SPOT:
+            accounts: [<name1>]
+            chat_id: '@<chat-id of your telegram channel>'
+            chat_pseudo: spot-all
+        FUT:
+            accounts: [<name2>]
+            chat_id: '@<chat-id of your telegram channel>'
+            chat_pseudo: fut-all
+        HODL:
+            accounts: [<name1>]
+            chat_id: '@<chat-id of your telegram channel>'
+            chat_pseudo: hodl-all
 
 Logging
 -------

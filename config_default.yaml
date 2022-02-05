@@ -1,22 +1,51 @@
 ---
 #
-# configuration file for python-binance-reporting package
+# default configuration file for binance-reporting package
 #
 
 modules:
   # mandatory
-  # provides the modules to be run
+  # defines the modules to be run
   # 'yes' means this module will run, 'no' means it wont
-  # please dont remove any of the lines
-  download_balances: yes
-  download_daily_account_snapshots: yes
-  download_trades: yes
-  download_orders: yes
-  download_open_orders: yes
-  download_deposits: yes
-  download_withdrawals: yes
-  balance_ticker: yes
-  download_prices: yes
+  # instead of 'no', you can as well remove the line
+  balances: yes
+  daily_account_snapshots: yes
+  trades: yes
+  orders: yes
+  open_orders: yes
+  deposits: yes
+  withdrawals: yes
+  ticker: yes
+  prices: yes
+  klines: yes # if klines is 'yes', a separate section 'klines' is expected to provede specific config details
+
+klines:
+  # name of directory, in which the klines data should be stored
+  # this is a sub-directory of the location from where the python script has been started
+  dir: klines_data
+  # list of intervals, for which klines should be downloaded
+  # no download if it is empty
+  intervals: ['5m', '1d']
+  # list of symbols, for which klines should be downloaded
+  # if empty, all the tradingpairs will be taken from the exchange
+  # you can also only provide a text, which needs to be included 
+  # in the trading symbol, e.g. 'USDT' would only take those 
+  # trading pairs, which have USDT included, e.g. BTCUSDT, ADAUSDT etc
+  # you can as well provide several items, like ['USDT', 'USDC', 'BTC']
+  symbols: ['USDT']
+  # technical indicators can be added. These are based on the finta module https://github.com/peerchemist/finta
+  # you can add as many indicators as you want, as long as you provide the name in the list above and the parameters in the details below
+  # the parameters need to be the same as the finta module requires them
+  indicators: ['RSI', 'EMA']
+  # list of config parameters expected by the indicator according to the finta module
+  # for 'period', you can provide a list of periods and they will be added
+  indicators_config:
+    RSI:
+      period: [14]
+    EMA:
+      period: [20, 50, 100, 200] # you can specify more than one timeframe, and a separate column will be added to the csv
+    WILLIAMSR:
+      period: [14]
 
 accounts:
   JAN:
@@ -130,11 +159,3 @@ download_daily_account_snapshots:
   # max value is 30 (given from Binance)
   # this can be set to less than 30 in case of connection errors
   snapshot_days_per_request: 30
-
-download_klines:
-  # if empty, all the tradingpairs will be taken from the exchange
-  # you can provide a text, which needs to be included 
-  # in the trading pair, e.g. 'USDT' would only take those 
-  # trading pairs, which have USDT included, e.g. BTCUSDT etc
-  trading_pairs: 'USDT'
-  kline_interval: ['5m', '1d']
