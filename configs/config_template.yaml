@@ -6,6 +6,10 @@
 # e.g. downloading balances every hour, but downloading klines only once a day
 # 
 
+#
+# MINIMUM CONFIGURATION
+#
+
 # defining the modules to be run
 # 'yes' means this module will run, 'no' means it wont
 # instead of 'no', you can as well remove the line
@@ -31,6 +35,48 @@ modules:
   prices: no
   # if klines is 'yes', a separate section 'klines' is expected 'see below'
   klines: no
+  
+# provide account details to access binance
+# the below entries is only an example and need to be changed with your own data
+accounts:
+  # provide a name for your account
+  <name1>:
+    # the following 4 values are mandatory
+    # name of a sub-directory where the csv files related to this account are saved
+    # it is a sub-directory from where this script is run
+    # in case you run this via scheduler, make sure you change to the right directory
+    dir: <dir-name-1>
+    # type of account: SPOT or FUTURES
+    type: SPOT or FUTURES
+    # PUBLIC/SECRET key combination for accessing the API of the exchange and pulling your information
+    # the actual key needs to be stored as an environment variable on your local machine
+    # the name of the environment variable is given below
+    osvar_api_public: <env variable for PUBLIC key account1>
+    osvar_api_secret: <env variable for SECRET key account1>
+    # following parameters are optional and only needed when activating the ticker module
+    chat_pseudo: <chat-pseudo> # provide any text, which is used to identify the different msg on telegram
+    chat_id: '@<chat-id of your telegram channel>'
+    # following values are for calculating the PnL of your account in the telegram ticker message
+    investment: 0
+    cash: 0
+    # portval = overall value of the porfolio; this is used as a basis to calculate the profit
+    portval: 0
+    profit: 0
+  <name2>:
+    dir: <dir-name-2>
+    type: SPOT or FUTURES
+    osvar_api_public: <env variable for PUBLIC key account2>
+    osvar_api_secret: <env variable for SECRET key account2>
+    chat_pseudo: <chat-pseudo>
+    chat_id: '@<chat-id of your telegram channel>'
+    investment: 0
+    cash: 0
+    portval: 0
+    profit: 0
+
+#
+# EXTENTED CONFIGURATION
+#
 
 # in case the module 'kline' is set to 'yes', this section is needed to configure kline downloads
 klines:
@@ -38,7 +84,7 @@ klines:
   # this is a sub-directory of the location from where the python script has been started
   dir: klines_data
   # list of intervals, for which klines should be downloaded
-  # no download if it is empty
+  # can be multiple entries
   intervals: ['5m', '1d']
   # list of symbols, for which klines should be downloaded
   # if empty, all the tradingpairs will be taken from the exchange
@@ -47,84 +93,36 @@ klines:
   # trading pairs, which have USDT included, e.g. BTCUSDT, ADAUSDT etc
   # you can as well provide several items, like ['USDT', 'USDC', 'BTC']
   symbols: ['USDT']
-  
-# provide account details to access binance
-# the below entries is only an example and need to be changed with your own data
-accounts:
-  # provide a name for your account
-  JAN:
-    # the following 4 values are mandatory
-    # name of a sub-directory where the csv files related to this account are saved
-    # it is a sub-directory from where this script is run
-    # in case you run this via scheduler, make sure you change to the right directory
-    dir: JAN
-    # type of account: SPOT or FUTURES
-    type: SPOT
-    # PUBLIC/SECRET key combination for accessing the API of the exchange and pulling your information
-    # the actual key needs to be stored as an environment variable on your local machine
-    # the name of the environment variable is given below
-    osvar_api_public: READ_PUBLIC_JAN_SPOT
-    osvar_api_secret: READ_SECRET_JAN_SPOT
-    # following parameters are optional and only needed when activating the ticker module
-    chat_pseudo: Jan # provide any text, which is used to identify the different msg on telegram
-    chat_id: '@<chat-id of your telegram channel>'
-    # following values are for calculating the PnL of your account in the ticker message
-    investment: 0
-    cash: 0
-    portval: 0
-    profit: 0
-  JAN-FUT:
-    dir: JAN
-    type: FUTURES
-    osvar_api_public: READ_PUBLIC_JAN_FUTURES
-    osvar_api_secret: READ_SECRET_JAN_FUTURES
-    chat_pseudo: JanF
-    chat_id: '@<chat-id of your telegram channel>'
-    investment: 0
-    cash: 0
-    portval: 0
-    profit: 0
-  JAN-COINS:
-    dir: JAN
-    type: SPOT
-    osvar_api_public: READ_PUBLIC_JAN_COINS_SPOT
-    osvar_api_secret: READ_SECRET_JAN_COINS_SPOT
-    chat_pseudo: JanC
-    chat_id: '@<chat-id of your telegram channel>'
-    investment: 0
-    cash: 0
-    portval: 0
-    profit: 0
 
 # in case the module 'ticker' is set to 'yes', this section is needed to configure telegram
 telegram:
   # used for pushing notifications to Telegram
-  # make sure this one has access to the telegram channel you want to post to
+  # make sure the provided token has access to the telegram channel you want to send the message to
   # the telegram channel needs to be public
   token: <token>
 
 # in case the module 'ticker' is set to 'yes', this section can be used to bundle different accounts
 # and send a summary of these accounts to a telegram channel
-# the below entries is only an example and need to be changed with your own data
+# the below entries are only an example and need to be changed with your own data
 account_groups:
   # multiple account groups can be defined
   ALL:
     # list all the accounts which are part of this group
-    accounts: [JAN, JAN-FUT, JAN-COINS]
+    accounts: [<name1>, <name2>]
     chat_id: '@<chat-id of your telegram channel>'
     chat_pseudo: all
   SPOT:
-    accounts: [JAN, JAN-COINS]
+    accounts: [<name1>]
     chat_id: '@<chat-id of your telegram channel>'
-    chat_pseudo: hodl-all
+    chat_pseudo: spot-all
   FUT:
-    accounts: [JAN-FUT]
+    accounts: [<name2>]
     chat_id: '@<chat-id of your telegram channel>'
     chat_pseudo: fut-all
   HODL:
-    accounts: [JAN-COINS]
+    accounts: [<name1>]
     chat_id: '@<chat-id of your telegram channel>'
-    chat_pseudo: spot-all
+    chat_pseudo: hodl-all
     
 logging:
   # used for writing status messages
