@@ -1034,13 +1034,9 @@ def klines(dir, symbols, intervals, indicators, indicators_config):
         - description of header for klines is documented 
         here: https://python-binance.readthedocs.io/en/latest/binance.html?highlight=get_historical_klines_generator#module-binance.client
 
-    TODO make usage of logging module rather than print statements
-    TODO incorporate into binance_reporting module
-    TODO work with config file
-    TODO align files in directory with available pairs (some pairs get de-listed, hence file can be deleted)
-    TODO only keep files for pairs, which have up-to-date data available; otherwise, just delete them
-    TODO sub-function for adding technical indicators to all files in a folder
-    
+    TODO klines: avoid downloading klines for pairs which dont provide up-to-date data anymore (e.g. last entry is longer ago than 10 times the selected timeframe)
+    TODO klines: cleanup files, which dont have up-to-date data anymore
+    TODO adding technical indicators after downloading klines according to config file
     """
 
     # internal variables
@@ -1075,13 +1071,13 @@ def klines(dir, symbols, intervals, indicators, indicators_config):
             else:
                 logging.debug('  ... no previous downloads found!')
             k = pd.to_datetime(k_time, unit='ms') # datetime.utcfromtimestamp(k_time/1000).strftime('%d-%m-%y %H:%M:%S')
-            logging.debug("  ... Time of last record: ", k)
+            logging.debug("  ... Time of last record: %s", str(k))
             logging.debug('  ... Checking for new records ...')
             kline_new = pd.DataFrame(client.get_historical_klines_generator(pair, interval, int(k_time)))
             if len(kline_new) < 2:
                 logging.debug('  ... No new records available ...')
                 continue
-            logging.debug('  ... ' + str(len(kline_new)) + ' new Records found')
+            logging.debug('  ... %s new Records found', str(len(kline_new)))
             kline_new = kline_new.drop([6,7,8,9,10,11], axis = 1)
             kline_new = kline_new.apply(pd.to_numeric)
             kline_new.columns = ['open time', 'open', 'high', 'low', 'close', 'volume']
@@ -1116,6 +1112,6 @@ def klines(dir, symbols, intervals, indicators, indicators_config):
             hlp.API_weight_check(client)
             logging.info("--- FINISHED --- " + str(pair) + " --- " + interval + " --- " + str(paircount) + " / " + str(len(symbols)) + " ---")
 
-    hlp.klines_merge(dir + '/1d/', dir, 'history_1d_klines_all Assets.csv')
+    hlp.klines_merge(dir + '/1d/', dir, 'history_1d_klines_all_Assets.csv')
 
     logging.info("--- Finished --- binance kline downloading ---")
