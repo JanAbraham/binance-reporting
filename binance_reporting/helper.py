@@ -29,15 +29,16 @@ def read_config(args):
 
     config_default = {
         "modules" : {
-            "download_balances": True,
-            "download_daily_account_snapshots": True,
-            "download_trades": True,
-            "download_orders": True,
-            "download_open_orders": True,
-            "download_deposits": True,
-            "download_withdrawals": True,
-            "balance_ticker": True,
-            "download_prices": True},
+            "balances": False,
+            "daily_account_snapshots": False,
+            "trades": False,
+            "orders": False,
+            "open_orders": False,
+            "deposits": False,
+            "withdrawals": False,
+            "ticker": False,
+            "prices": False,
+            "klines": False},
         "accounts": {
             "Account1": {
             "dir": "dir1",
@@ -73,10 +74,11 @@ def read_config(args):
             "log_level": "INFO",
             "log_target": "console",
             "log_file" : "binance_reporting.log"},
-        "download_klines": {
-            "trading_pairs": 'USDT',
+        "klines": {
+            "dir": "klines_data",
+            "symbol": ['USDT'],
             "kline_interval": ['5m', '1d']},
-        "download_daily_account_snapshots": {
+        "daily_account_snapshots": {
             "snapshot_days_max": 180,
             "snapshot_days_per_request": 30}}
 
@@ -90,7 +92,7 @@ def read_config(args):
             config = config_default
             with open(config_file, 'r') as file:
                 config_diff = yaml.safe_load(file)
-            logging.debug('Updating config with differential config.')
+            logging.debug('Updating config with provided config.')
             config.update(config_diff)
             logging.debug('following configuration has been loaded: %s', config)
     else:
@@ -139,6 +141,7 @@ def get_symbols(patterns:list = ['']):
     symbols_all = pd.DataFrame(client.get_all_tickers()).loc[:, ["symbol"]]
 
     # filter out pairs which are in the list of patterns
+
     for pattern in patterns:
         symbols = symbols_all[
             symbols_all.symbol.str.contains(pattern)]

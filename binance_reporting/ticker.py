@@ -1,7 +1,10 @@
 import os
 import logging
 import telegram.ext     # sending balance information to telegram
-from binance_reporting.downloader import balances
+try:
+    from binance_reporting.downloader import balances
+except:
+    from downloader import balances
 
 def send_bal(accounts, account_groups, telegram_token):
     """ sending short balance status msg to telegram channels

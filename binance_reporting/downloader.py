@@ -7,18 +7,19 @@ functions available for:
     - deposits
     - withdrawals
     - daily snapshots
+    - klines
     - send balances to telegram channel
 
 :raises SystemExit in case config file has not been provided.
 
 if it is called directly, it will download all mentioned above
+
+TODO incorporate kline downloads into binance_download.py
+TODO add technical indicators to kline download
 TODO re-work withdrawals equal to deposits (maybe merge them into one function 'transfers'? and create once csv file)
 TODO add docstrings to each function
-TODO add funtion to merge info of different accounts into one file for better reporting with excel pivot tables
 TODO standardize column names accross different files (e.g. insertTime vs. updateTime vs. updatetime or asset vs. coin)
 TODO add an addresslist-translation-file to translate cryptic address names into human readable names and use it for deposits & withdrawals
-TODO remove error messages about 'returning a view vesus a copy
-TODO incorporate kline downloads into binance_download.py
 TODO balances: add average entry price of open orders for locked assets + estimated exit value
 """
 import os               # set home directory of current user depending on OS
@@ -26,8 +27,12 @@ import sys              # get arguments from calling the script
 import time
 import pandas as pd
 from binance.client import Client
-from binance_reporting import helper as hlp
 import logging
+from finta import TA        # for technical indicators
+try:
+    from binance_reporting import helper as hlp
+except:
+    import helper as hlp
 
 def balances(
     account_name: str,  # used to differentiate info in debug log
@@ -1002,3 +1007,115 @@ def prices(prices_file):
     logging.debug("writing prices to csv ...")
     prices.to_csv(prices_file, index=False)
     logging.info(" - Finished writing Prices to csv! -")
+
+
+def klines(dir, symbols, intervals, indicators, indicators_config):
+    """ downloading historic ohlc data from exchange
+
+    Input:
+        - trading pairs (as list)
+        - kline interval
+
+    Output:
+        - ohlc data
+        - technical Indicators (currently RSI, WilliamsR and WRSI)
+
+    this data is used for backtesting (currently done in excel)
+
+    Procedure:
+        - verify if kline data has been downloaded already previously
+        - if so, determine the timestamp of the last read kline
+        - check if new klines are available on the exchange
+        - if so, add these to the existing klines if available
+        - write ohlc data into a file per pair and kline interval
+        - create new file for all data from 1d kline interval for use in excel
+
+    further information:
+        - description of header for klines is documented 
+        here: https://python-binance.readthedocs.io/en/latest/binance.html?highlight=get_historical_klines_generator#module-binance.client
+
+    TODO make usage of logging module rather than print statements
+    TODO incorporate into binance_reporting module
+    TODO work with config file
+    TODO align files in directory with available pairs (some pairs get de-listed, hence file can be deleted)
+    TODO only keep files for pairs, which have up-to-date data available; otherwise, just delete them
+    TODO sub-function for adding technical indicators to all files in a folder
+    
+    """
+
+    # internal variables
+    klines = pd.DataFrame()
+
+    logging.info("--- Start --- binance kline downloading ---")
+
+    logging.debug('---- connecting to binance ...')
+
+    # create the binance Client; no need for api key
+    client = Client("", "", {"timeout": 30})
+
+    logging.info('---- downloading klines of %s Trading pairs ...', str(len(symbols)))
+
+    for interval in intervals:
+        paircount = 0
+        klines_file = dir + '/' + interval + '/' + 'history_' + interval + '_klines'
+        if not os.path.exists(dir + '/' + interval):
+            os.makedirs(dir + '/' + interval)
+        for pair in symbols:
+            paircount = paircount + 1
+            logging.info("---- START --- %s --- %s --- %s / %s ---", str(pair), interval, str(paircount), str(len(symbols)))
+            logging.debug('  ... verify previous downloads of historic data ...')
+            history_file_pair = klines_file + '_' + str(pair) +'.csv'
+            k_time = 0
+            if os.path.isfile(history_file_pair):
+                logging.debug('  ... previous downloads found! Reading ...')
+                klines = pd.read_csv(history_file_pair, header=0, skip_blank_lines=True, usecols=[0,1,2,3,4,5,6], skipfooter=1, engine='python')
+                logging.debug('  ... ' + str(len(klines)) + ' Records found')
+                if klines.empty: continue
+                k_time = klines.iloc[-1, 6] + 1 #time of last entry
+            else:
+                logging.debug('  ... no previous downloads found!')
+            k = pd.to_datetime(k_time, unit='ms') # datetime.utcfromtimestamp(k_time/1000).strftime('%d-%m-%y %H:%M:%S')
+            logging.debug("  ... Time of last record: ", k)
+            logging.debug('  ... Checking for new records ...')
+            kline_new = pd.DataFrame(client.get_historical_klines_generator(pair, interval, int(k_time)))
+            if len(kline_new) < 2:
+                logging.debug('  ... No new records available ...')
+                continue
+            logging.debug('  ... ' + str(len(kline_new)) + ' new Records found')
+            kline_new = kline_new.drop([6,7,8,9,10,11], axis = 1)
+            kline_new = kline_new.apply(pd.to_numeric)
+            kline_new.columns = ['open time', 'open', 'high', 'low', 'close', 'volume']
+            kline_new['open time ux'] = kline_new['open time']
+
+            logging.debug('  ... adding new klines to existing klines (if available)')
+            klines = pd.concat([klines, kline_new], ignore_index=True)
+            klines['open time'] = pd.to_datetime(klines['open time ux'], unit='ms')
+            klines.sort_values(by=['open time ux'], inplace=True)
+
+            
+            if os.environ.get('USERNAME') == 'Jan':
+                logging.debug('  ... adding technical indicators')
+                #for indicator in indicators:
+                #    if period is list:
+                #        for period in klines_config[]
+                #    else:
+                #        klines[indicator + klines_config[indicator][period]] = TA.indicator(klines_config[indicator][period])
+                klines['RSI'] = TA.RSI(klines, 14)
+                klines['WilliamsR'] = TA.WILLIAMS(klines, 14)
+                klines['WRSI'] = klines['RSI'] + klines['WilliamsR']
+                #klines['EMA50'] = TA.EMA(klines, period=50)
+                #klines['EMA100'] = TA.EMA(klines, period=100)
+                #klines['EMA200'] = TA.EMA(klines, period=200)
+                #klines['DEMA50'] = TA.DEMA(klines, period=50)
+                #klines['DEMA100'] = TA.DEMA(klines, period=100)
+                #klines['DEMA200'] = TA.DEMA(klines, period=200)
+
+            logging.debug("  ... writing new records for " + str(pair))
+            klines.to_csv(history_file_pair, index=False)
+            logging.debug("  ... check API payload and wait for cool-off if necessary")
+            hlp.API_weight_check(client)
+            logging.info("--- FINISHED --- " + str(pair) + " --- " + interval + " --- " + str(paircount) + " / " + str(len(symbols)) + " ---")
+
+    hlp.klines_merge(dir + '1d/', dir, 'history_1d_klines_all Assets.csv')
+
+    logging.info("--- Finished --- binance kline downloading ---")

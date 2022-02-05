@@ -2,10 +2,14 @@ import os
 import sys
 import logging
 
-from binance_reporting import helper
-from binance_reporting import downloader
-from binance_reporting import ticker
-
+try:
+    from binance_reporting import helper
+    from binance_reporting import downloader
+    from binance_reporting import ticker
+except:
+    import helper
+    import downloader
+    import ticker
 
 # logging will start with default settings and on console
 # after config is read, these will overwrite the default settings
@@ -36,6 +40,7 @@ def main():
         - deposits
         - withdrawals
         - daily snapshots
+        - klines
 
     """
 
@@ -71,11 +76,13 @@ def main():
 
     accounts = config['accounts']
     account_groups = config['account_groups']
+    modules = config['modules']
 
-    if config['modules']['balance_ticker']:
+
+    if modules['ticker']:
         ticker.send_bal(accounts, account_groups, telegram_token)
 
-    list_of_trading_pairs = helper.get_trading_pairs('USDT')
+    list_of_trading_pairs = helper.get_symbols('USDT')
 
     for account in accounts:
         logging.info(" -- start downloading data for account %s --", account)
@@ -93,7 +100,6 @@ def main():
         balances_file = file_directory + "balances_" + account + ".csv"
         bal_fut_positions_file = file_directory + "balances_" + account + "_positions.csv"
         bal_fut_assets_file = file_directory + "balances_" + account + "_assets.csv"
-        prices_file = file_directory + "prices.csv"
         deposits_file = file_directory + "deposits_" + account + ".csv"
         withdrawals_file = file_directory + "withdrawals_" + account + ".csv"
         snapshots_balances_file = (file_directory + "snapshot_daily_" + account + "_balances.csv")
@@ -102,29 +108,27 @@ def main():
 
         writetype = "w"
 
-        modules = config['modules']
-
-        if modules['download_balances']: 
+        if modules['balances']: 
             downloader.balances(
                 account, account_details['type'], PUBLIC, SECRET, balances_file, bal_fut_positions_file, bal_fut_assets_file, writetype)
 
-        if modules['download_trades']:
+        if modules['trades']:
             downloader.trades(
                 account, account_details['type'], PUBLIC, SECRET, list_of_trading_pairs, trades_file)
 
-        if modules['download_orders']:
+        if modules['orders']:
             downloader.orders(account, account_details['type'], PUBLIC, SECRET, list_of_trading_pairs, orders_file)
 
-        if modules['download_open_orders']:
+        if modules['open_orders']:
             downloader.open_orders(account, account_details['type'], PUBLIC, SECRET, open_orders_file)
 
-        if modules['download_deposits']:
+        if modules['deposits']:
             downloader.deposits(account, account_details['type'], PUBLIC, SECRET, deposits_file)
 
-        if modules['download_withdrawals']:
+        if modules['withdrawals']:
             downloader.withdrawals(account, account_details['type'], PUBLIC, SECRET, withdrawals_file)
 
-        if modules['download_daily_account_snapshots']:
+        if modules['daily_account_snapshots']:
             downloader.daily_account_snapshots(
                 account,
                 account_details['type'],
@@ -135,12 +139,13 @@ def main():
                 snapshots_assets_file
             )
 
-        if modules['download_prices']:
-            downloader.prices(prices_file)
-
         logging.info(" -- Finished downloading all data for account %s --", account)
 
-    if modules['download_daily_account_snapshots']:
+    if modules['prices']:
+        prices_file = data_dir + "/prices.csv"
+        downloader.prices(prices_file)
+
+    if modules['daily_account_snapshots']:
         logging.info(" -- Merging snapshot files from different accounts. --")
         targetfile = (data_dir + "/snapshots_daily_all_accounts.csv")
         sourcefiles = []
@@ -158,7 +163,7 @@ def main():
         helper.merge_files(sourcefiles, targetfile)
         logging.info(" -- Merging snapshot files finished. --")
 
-    if modules['download_balances']:
+    if modules['balances']:
         logging.info(" -- Merging balances files from different accounts. --")            
         targetfile = (data_dir + "/balances_all_accounts.csv")
         sourcefiles = []
@@ -175,7 +180,7 @@ def main():
         helper.merge_files(sourcefiles, targetfile)
         logging.info(" -- Merging snapshot files finished. --")
 
-    if modules['download_deposits']:
+    if modules['deposits']:
         logging.info(" -- Merging deposit files from different accounts. --")            
         targetfile = (data_dir + "/deposits_all_accounts.csv")
         sourcefiles = []
@@ -195,7 +200,7 @@ def main():
         helper.merge_files(sourcefiles, targetfile)
         logging.info(" -- Merging deposit files finished. --")
 
-    if modules['download_withdrawals']:
+    if modules['withdrawals']:
         logging.info(" -- Merging withdrawal files from different accounts. --")            
         targetfile = (data_dir + "/withdrawals_all_accounts.csv")
         sourcefiles = []
@@ -214,6 +219,18 @@ def main():
         targetfile = data_dir + "/transfers_all_accounts.csv"
         helper.merge_files(sourcefiles, targetfile)
         logging.info(" -- Merging withdrawal files finished. --")
+
+    if modules['klines']:
+        klines_config = config['klines']
+        klines_dir = data_dir + '/' + klines_config['dir']
+        klines_symbols = helper.get_symbols(klines_config['symbols'])
+        klines_intervals = klines_config['intervals']
+        klines_indicators = klines_config['indicators']
+        klines_indicators_config = klines_config['indicators_config']
+        if not os.path.exists(klines_dir):
+            os.makedirs(klines_dir)
+
+        downloader.klines(klines_dir, klines_symbols, klines_intervals, klines_indicators, klines_indicators_config)
 
 if __name__ == "__main__":
     main()

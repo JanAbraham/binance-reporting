@@ -5,8 +5,8 @@ v0.x.x - work in progress
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 enhancements
-  - change to CLI mode
-
+  - enable CLI mode
+  - adding kline downloads
 
 **in pipeline**
     - klines downloader
