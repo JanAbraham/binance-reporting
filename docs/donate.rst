@@ -11,8 +11,7 @@ If this library helped you out, feel free to donate.
      - Address
      - Network
    * - XRP
-     - rEb8TK3gBgk5auZkwc6sHnwrGVJH8DuaLh
-       MEMO: 101430969
+     - rEb8TK3gBgk5auZkwc6sHnwrGVJH8DuaLh / MEMO: 101430969
      - Ripple Network
    * - TRX
      - TH14B1PT6bPfz2RF5C1hiP2G62438v113r
