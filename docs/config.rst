@@ -1,4 +1,8 @@
 .. _configuration:
+
+.. toctree::
+   :maxdepth: 5
+
 Configuration
 =============
 
@@ -9,10 +13,11 @@ Configuration
 A minimum configuration file must have the sections *modules* and *accounts*.
 
 Minimum Configuration
-=====================
+---------------------
 
 Modules
--------
+~~~~~~~
+
 The binance-reporting library has plenty of modules, which can be executed separately or all together in one run.
 
 Following modules are currently available:
@@ -46,7 +51,8 @@ Following modules are currently available:
         klines: no
 
 Accounts
---------
+~~~~~~~~
+
 This section is critical for downloading account specific information from the exchange. Most important are the PUBLIC & SECRET to make a connection to the exchange.
 
 .. note::Please ensure that your API keys only have read access. No trading or transfer permissions are needed.
@@ -94,10 +100,11 @@ This library requires you to save the API keys as environment variables in your 
             profit: 0
 
 Extented Configuration
-======================
+----------------------
 
 Klines
-------
+~~~~~~
+
 There is a module to download history information from the exchange.
 
 .. code-block:: yaml
@@ -119,7 +126,8 @@ There is a module to download history information from the exchange.
         symbols: ['USDT']
 
 Telegram ticker
----------------
+~~~~~~~~~~~~~~~
+
 You can send a short message to a pubic telegram channel. To do this, following information is needed in the configuration file. To ensure proper calculation of values, you need to provide the values in the accounts module.
 
 .. code-block:: yaml
@@ -155,7 +163,8 @@ You can send a short message to a pubic telegram channel. To do this, following 
             chat_pseudo: hodl-all
 
 Logging
--------
+~~~~~~~
+
 - Logging is done to the console, but ca be changed to file. This comes especially handy in case you start the data download as a scheduled task.
 - Only INFO messages are shown. However, this can be customized as shown below
 

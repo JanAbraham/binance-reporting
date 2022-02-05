@@ -5,37 +5,23 @@
 
 .. include:: ../README.rst
 
-Contents
-========
+Content
+-------
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    overview
    config
    modules
    faq
    changelog
+   contribute
+   support
+   donate
    license
 
 Index
-=====
+-----
 
 * :ref:`genindex`
-
-Contribute
-----------
-If you like to contribute or have an idea for improvements / enhancements, please contact me via github https://github.com/JanAbraham
-  
-- `Source Code <https://github.com/JanAbraham/binance-reporting>`_
-
-Please be informed, that I am only working sporadically on this project. I apologize already for longer response times.
-
-Support
--------
-If you are having issues, please open an item here:
-- `Issue Tracker <https://github.com/JanAbraham/binance-reporting/issues>`_
-
-License
--------
-The project is licensed under GNU General Public License.

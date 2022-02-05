@@ -1,8 +1,8 @@
-Technical Documentation of Modules
-==================================
+Modules - technical documentation
+=================================
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 2
 
    binance_reporting
    helper
