@@ -25,8 +25,7 @@ def read_config(args):
         - update default config with config from file
         - give the dictionary with config infos back as a result
 
-    :param args: required; 
-    :type args: list
+    :param list args: required; config file as provided when calling the script
 
     :returns: dictionary with config info
     """
@@ -127,8 +126,7 @@ def get_symbols(patterns:list = ['']):
         - a string = trading pairs, which contain this string
         - a list of strings = trading pairs, which contain any of the strings in the list
 
-    :param pattern: required (if empty, all trading pairs will be returned)
-    :type pattern: str or list
+    :param str or list pattern: required (if empty, all trading pairs will be returned)
 
     :returns: list of filtered trading pairs available on exchange
     """
@@ -170,15 +168,15 @@ def API_weight_check(client):
 
     **Procedure**
         - check what the current payload is
-        - if 85% of max payload has been reached, cool-off is initiated
+        - if 75% of max payload has been reached, cool-off is initiated
         - send a keepalive signal for the api connection
 
-    :param client: required
-    :type client: object
+    :param object client: required
 
     :returns: the payload value
 
     :TODO: read current max value for Payload from Binance config
+
     :TODO: SAPI API seems to have threshold of 12000 => incorporate those (discovered during snapshot downloads)
     """
 
@@ -244,8 +242,7 @@ def API_close_connection(client):
     **Procedure**
         - get listen key of client and close stream
 
-    :param client: required
-    :type client: object
+    :param object client: required
 
     :returns: None
 
@@ -271,8 +268,7 @@ def file_remove_blanks(filename):
         - dropping all empty rows from the dataframe
         - writing file back
 
-    :param filename: required; must include the complete absolute path to the file
-    :type filename: str
+    :param str filename: required; must include the complete absolute path to the file
 
     :returns: written csv file without empty rows
     """
@@ -295,11 +291,9 @@ def merge_files(files_src: list, file_trgt: str):
         - get a list of source files
         - loop through all files and append to target file
 
-    :param files_src: required; list of files, which should be merged
-    :type files_src: list
+    :param list files_src: required; list of files, which should be merged
 
-    :param file_trgt: required; provides filename for merged csv file
-    :type file_trgt: str
+    :param str file_trgt: required; provides filename for merged csv file
 
     :returns: csv file with all the merged info
     """
@@ -325,15 +319,10 @@ def merge_klines(klines_dir_src : str, klines_dir_trgt : str, filename_trgt : st
         - get the source directory with all the kline csv files
         - loop through all files and append to target filename
 
-    :param klines_dir_src: required; provides complete path to source directory with all klines csv files
-    :type klines_dir_src: str
-
-    :param klines_dir_trgt: required; provides complete path to target directory for the merged csv files
-    :type klines_dir_trgt: str
-
-    :param filename_trgt: required; provides filename for merged csv file
-    :type filename_trgt: str
-
+    :param str klines_dir_src: required; provides complete path to source directory with all klines csv files
+    :param str klines_dir_trgt: required; provides complete path to target directory for the merged csv files
+    :param str filename_trgt: required; provides filename for merged csv file
+    
     :returns: csv file with all the merged klines
     """
 

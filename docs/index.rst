@@ -13,12 +13,12 @@ Content
 
    overview
    config
-   modules
    faq
    changelog
    contribute
    support
    donate
+   modules
    license
 
 Index

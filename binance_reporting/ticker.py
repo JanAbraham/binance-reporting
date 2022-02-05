@@ -4,8 +4,8 @@ functions available for:
     - sending balance and PnL for given accounts
     - send summary msg of balances for group of accounts (e.g. all SPOT accounts or all FUTURES accounts etc.)
 
-TODO add function to ask ad-hoc account status
-TODO add function to send msg after every trade on given accounts
+:TODO: add function to ask ad-hoc account status
+:TODO: add function to send msg after every trade on given accounts
 """
 
 import os

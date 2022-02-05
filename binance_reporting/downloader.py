@@ -8,19 +8,14 @@ functions available for:
     - withdrawals
     - daily snapshots
     - klines
-    - send balances to telegram channel
 
-:raises SystemExit in case config file has not been provided.
+:raises: SystemExit, in case config file has not been provided.
 
-if it is called directly, it will download all mentioned above
-
-TODO incorporate kline downloads into binance_download.py
-TODO add technical indicators to kline download
-TODO re-work withdrawals equal to deposits (maybe merge them into one function 'transfers'? and create once csv file)
-TODO add docstrings to each function
-TODO standardize column names accross different files (e.g. insertTime vs. updateTime vs. updatetime or asset vs. coin)
-TODO add an addresslist-translation-file to translate cryptic address names into human readable names and use it for deposits & withdrawals
-TODO balances: add average entry price of open orders for locked assets + estimated exit value
+:TODO: add technical indicators to kline download
+:TODO: re-work withdrawals equal to deposits (maybe merge them into one function 'transfers'? and create once csv file)
+:TODO: standardize column names accross different files (e.g. insertTime vs. updateTime vs. updatetime or asset vs. coin)
+:TODO: provide option for addresslist-translation-file to translate cryptic address names into human readable names and use it for deposits & withdrawals
+:TODO: balances: add average entry price of open orders for locked assets + estimated exit value
 """
 import os               # set home directory of current user depending on OS
 import sys              # get arguments from calling the script
@@ -44,25 +39,29 @@ def balances(
     bal_fut_assets_file: str = '',
     writetype: str = 'w',  # 'a' or 'w'
     ):
-    """download balances from exchange and write it into a csv file
+    """download balances from exchange and write it into a csv file if provided
 
-    Arguments:
-    - account_name -- Is used in the log file for easier debugging.
-    - PUBLIC -- public part of API key to open connection to exchange
-    - SECRET -- secret part of API key to open connection to exchange
-    - balances_file -- name and location of the csv file to be filled with balances info
-    - bal_fut_positions_file -- name and location of the csv file to be filled with future positions info
-    - bal_fut_assets_file -- name and location of the csv file to be filled with futures assets info
-    - writetype -- indicates if balances should be added ('a') or a new file should be written ('w')
+    **Procedure:**
+        - check if account is SPOT or FUTURES (there are different data models behind these two)
+        - add current USDT price for every asset in the balance
+        - in case there is no USDT price found: '0' value will be filled in
+        - save the data into the respective csv files (if provided), otherwise just return balance
+
+    :param str account_name: required; added to csv file for easier tracking
+    :param account_type: required. The type of the account.
+    :type account_type: SPOT or FUTURE
+    :param str PUBLIC: required; public part of API key to open connection to exchange
+    :param SECRET: required; secret part of API key to open connection to exchange
+    :param str balances_file: optional; name and location of the csv file to be filled with balances info (spot or futures)
+    :param str bal_fut_positions_file: optional; name and location of the csv file to be filled with future positions info
+    :param vbal_fut_assets_file: optional; name and location of the csv file to be filled with futures assets info
+    :param str writetype: optional; indicates if balances should be added ('a') or a new file should be written ('w')
     
-    Returns:
-    - writes csv file with balances of the binance account
-    - the USD value of free & locked assets, cash available and the overall portfolio value
-    
-    TODO add 'account_name' and 'account_type' into csv files
-    TODO downloading balances of future accounts
+    :return:
+        - writes csv file with balances of the account (if filenames have been provided)
+        - the USD value of free & locked assets, cash available and the overall portfolio value
+    :rtype: float64
     """
-
     logging.info(" - Start downloading balances for Account: %s -", account_name)
     logging.debug("connecting to binance ...")
 
@@ -233,12 +232,8 @@ def daily_account_snapshots(
         - in case there is no price found: '0' value will be filled in
         - save the data into the respective csv files
 
-    If you want to re-download all snapshots again, you
-    just need to delete this file. Be cautious: Binance only holds max.
-    180 days of snapshots. In case you want to go back furhter, these
-    days might be your only available information about older snapshots
-    written by this procedure in case you have run it before. I recommend 
-    to save the previous version and add the missing dates manually into 
+    If you want to re-download all snapshots again, you just need to delete this file. Be cautious: Binance only holds max. 180 days of snapshots. In case you want to go back furhter, these
+    days might be your only available information about older snapshots written by this procedure in case you have run it before. I recommend to save the previous version and add the missing dates manually into 
     the csv-file.
 
     adding some additional data to daily balances:
@@ -258,7 +253,7 @@ def daily_account_snapshots(
     :return: portfolio value and written csv file(s) in case filename(s) have been provided
     :rtype: float64
 
-    TODO: make snapshot positions file an optional parameter
+    :TODO: make snapshot positions file an optional parameter
     """
 
     import math
@@ -538,11 +533,27 @@ def daily_account_snapshots(
 def trades(
     account_name, account_type, PUBLIC, SECRET, list_of_trading_pairs, trades_file
     ):
-    #
-    # get trades and write them to csv file
-    #
-    # verify if file already exists and determine last recorded trade
+    """get trades and write them to csv file
 
+    **Procedure:**
+        - check if account is SPOT or FUTURES (there are different data models behind these two)
+        - verify if file already exists and determine last recorded trade
+        - loop through provided trading pairs and download historic trades if available
+        - save the downloaded trades to csv file
+
+    :param str account_name: required; added to csv file for easier tracking
+    :param account_type: required. The type of the account.
+    :type account_type: SPOT or FUTURE
+    :param str PUBLIC: required; public part of API key to open connection to exchange
+    :param SECRET: required; secret part of API key to open connection to exchange
+    :param list list_of_trading_pairs: required; list of trading pairs for which trades should be downloaded; if list is empty, every trading pair is being checked (there are over 2k trading pairs, so this can take a while)
+    :param str trades_file: required; name and location of the csv file to be filled with historic trades
+    
+    :return: writes csv file with historic trades of the provided account
+    :rtype: csv file
+
+    :TODO: include trades for FUTURES accounts as well 
+    """
     if account_type == "FUTURES":
         result = "Sorry, future accounts are not yet supported by this procedure."
         return result
@@ -621,7 +632,27 @@ def trades(
 def orders(
     account_name, account_type, PUBLIC, SECRET, list_of_trading_pairs, orders_file
     ):
+    """get orders and write them to csv file
 
+    **Procedure:**
+        - check if account is SPOT or FUTURES (there are different data models behind these two)
+        - verify if file already exists and determine last recorded order
+        - loop through provided trading pairs and download historic orders if available
+        - save the downloaded orders to csv file
+
+    :param str account_name: required; added to csv file for easier tracking
+    :param account_type: required. The type of the account.
+    :type account_type: SPOT or FUTURE
+    :param str PUBLIC: required; public part of API key to open connection to exchange
+    :param SECRET: required; secret part of API key to open connection to exchange
+    :param list list_of_trading_pairs: required; list of trading pairs for which orders should be downloaded; if list is empty, every trading pair is being checked (there are over 2k trading pairs, so this can take a while)
+    :param str orders_file: required; name and location of the csv file to be filled with historic orders
+    
+    :return: writes csv file with historic orders of the provided account
+    :rtype: csv file
+
+    :TODO: include orders for FUTURES accounts as well 
+    """
     logging.info(" - Start downloading orders for account: %s -", account_name)
     logging.debug("connecting to binance ...")
 
@@ -700,10 +731,25 @@ def orders(
 
 
 def open_orders(account_name, account_type, PUBLIC, SECRET, open_orders_file):
-    #
-    # read open orders and write them into a csv file
-    #
+    """get open orders and write them to csv file
 
+    **Procedure:**
+        - check if account is SPOT or FUTURES (there are different data models behind these two)
+        - connect to exchange and download all open orders
+        - save the downloaded open orders to csv file
+
+    :param str account_name: required; added to csv file for easier tracking
+    :param account_type: required. The type of the account.
+    :type account_type: SPOT or FUTURE
+    :param str PUBLIC: required; public part of API key to open connection to exchange
+    :param SECRET: required; secret part of API key to open connection to exchange
+    :param str open_orders_file: required; name and location of the csv file to be filled with the open orders
+    
+    :return: writes csv file with open orders of the provided account
+    :rtype: csv file
+
+    :TODO: include open orders for FUTURES accounts as well
+    """
     logging.info(" - Start downloading open orders for account: %s -", account_name)
     logging.debug("connecting to binance ...")
 
@@ -729,35 +775,30 @@ def open_orders(account_name, account_type, PUBLIC, SECRET, open_orders_file):
 
 
 def deposits(account_name, account_type, PUBLIC, SECRET, deposits_file):
-    """download account deposits from exchange and write it into a csv file
+    """download account deposits from exchange and write them into a csv file
 
-    In order to reduce load on the API, the function verifies if a csv-
-    file already exists. If so, it reads it to determine the time of the last
-    downloaded record. If you want to re-download all records again, you
-    just need to delete this file. Be careful: a re-download of all records might
-    take a while, depending on the amount of transactions you had.
+    Procedure:
+        - check if account is SPOT or FUTURES (there are different data models behind these two)
+        - verify if file already exists and determine last recorded deposit
+        - For every deposit, following data is being added to the downloaded data from the exchange:
+            - USDT price of the asset (close price from the day of transaction)
+            - In case of the price of the coin is not available anymore, '0' value is being filled in.
+            - overall value of coins in USDT from the day of the transaction
+            - time of transaction in UTC format
+        - save the downloaded deposits to csv file
 
-    For every transaction, following data is being added to the downloadable
-    data from the exchange:
-    - USDT price of the asset (close price from the day of transaction)
-    - overall value of coins in USDT from the day of the transaction
-    - time of transaction in UTC format
+    :param str account_name: required; added to csv file for easier tracking
+    :param account_type: required. The type of the account.
+    :type account_type: SPOT or FUTURE
+    :param str PUBLIC: required; public part of API key to open connection to exchange
+    :param SECRET: required; secret part of API key to open connection to exchange
+    :param str deposits_file: required; name and location of the csv file to be filled with the deposits
 
-    In case of the price of the coin is not available anymore,
-    '0' value is being filled in.
+    :return:
+        - writes csv file with deposits of the binance account
+        - dataframe with all deposits
 
-    Arguments:
-    - account_name -- Is used in the log file for easier debugging.
-    - account_type -- either SPOT or FUTURES
-    - PUBLIC -- public part of API key to open connection to exchange
-    - SECRET -- secret part of API key to open connection to exchange
-    - deposit_file -- csv file for all deposits
-
-    Returns:
-    - writes csv file with deposits of the binance account
-    - returns dataframe with all deposits
-
-    TODO add deposits for Futures Account
+    :TODO: add deposits for Futures Account
     """
 
     logging.info(" - Start downloading deposits for account %s -", account_name)
@@ -854,37 +895,31 @@ def deposits(account_name, account_type, PUBLIC, SECRET, deposits_file):
 
 
 def withdrawals(account_name, account_type, PUBLIC, SECRET, withdrawals_file):
-    """download account withdrawals from exchange and write it into a csv file
+    """download account withdrawals from exchange and write them into a csv file
 
-    In order to reduce load on the API, the function verifies if a csv-
-    file already exists. If so, it reads it to determine the time of the last
-    downloaded record. If you want to re-download all records again, you
-    just need to delete this file. Be careful: a re-download of all records might
-    take a while, depending on the amount of transactions you had.
+    Procedure:
+        - check if account is SPOT or FUTURES (there are different data models behind these two)
+        - verify if file already exists and determine last recorded withdrawal
+        - For every withdrawal, following data is being added to the downloaded data from the exchange:
+            - USDT price of the asset (close price from the day of transaction)
+            - In case of the price of the coin is not available anymore, '0' value is being filled in.
+            - overall value of coins in USDT from the day of the transaction
+            - time of transaction in UTC format
+        - save the downloaded withdrawals to csv file
 
-    For every transaction, following data is being added to the downloadable
-    data from the exchange:
-    - USDT price of the asset (close price from the day of transaction)
-    - overall value of coins in USDT from the day of the transaction
-    - time of transaction in UTC format
+    :param str account_name: required; added to csv file for easier tracking
+    :param account_type: required. The type of the account.
+    :type account_type: SPOT or FUTURE
+    :param str PUBLIC: required; public part of API key to open connection to exchange
+    :param SECRET: required; secret part of API key to open connection to exchange
+    :param str withdrawals_file: required; name and location of the csv file to be filled with the withdrawals
 
-    In case of the price of the coin is not available anymore,
-    '0' value is being filled in.
+    :return:
+        - writes csv file with withdrawals of the binance account
+        - dataframe with all withdrawals
 
-    Arguments:
-    - account_name -- Is used in the log file for easier debugging.
-    - account_type -- either SPOT or FUTURES
-    - PUBLIC -- public part of API key to open connection to exchange
-    - SECRET -- secret part of API key to open connection to exchange
-    - withdrawal_file -- csv file for all withdrawals
-
-    Returns:
-    - writes csv file with withdrawals of the binance account
-    - returns dataframe with all withdrawals
-
-    TODO add withdrawals for Futures Account
+    :TODO: add withdrawals for Futures Account
     """
-
     logging.info(" - Start downloading withdrawals for account: %s -", account_name)
 
     # customizable variables
@@ -994,9 +1029,16 @@ def withdrawals(account_name, account_type, PUBLIC, SECRET, withdrawals_file):
 
 
 def prices(prices_file):
-    #
-    # read prices for all trading pairs and write them to prices.csv file
-    #
+    """read prices for all trading pairs and write them to prices.csv file
+
+    Procedure:
+        - connect to exchange and download all prices
+        - save the downloaded prices to csv file
+
+    :param str prices_file: required; name and location of the csv file to be filled with the prices
+
+    :return: writes csv file with prices of all trading pairs on the exchange
+    """
     logging.info(" - Start downloading prices for all trading pairs from exchange -")
     logging.debug("connecting to binance ...")
 
@@ -1012,17 +1054,7 @@ def prices(prices_file):
 def klines(dir, symbols, intervals, indicators, indicators_config):
     """ downloading historic ohlc data from exchange
 
-    Input:
-        - trading pairs (as list)
-        - kline interval
-
-    Output:
-        - ohlc data
-        - technical Indicators (currently RSI, WilliamsR and WRSI)
-
-    this data is used for backtesting (currently done in excel)
-
-    Procedure:
+    **Procedure:**
         - verify if kline data has been downloaded already previously
         - if so, determine the timestamp of the last read kline
         - check if new klines are available on the exchange
@@ -1030,14 +1062,25 @@ def klines(dir, symbols, intervals, indicators, indicators_config):
         - write ohlc data into a file per pair and kline interval
         - create new file for all data from 1d kline interval for use in excel
 
-    further information:
-        - description of header for klines is documented here: https://python-binance.readthedocs.io/en/latest/binance.html?highlight=get_historical_klines_generator#module-binance.client
+    :param str dir: required; name and location of the directory where the date should be written to
+    :param list symbols: required. list of trading pairs for which the klines should be downloaded for
+    :param list intervals: required; list of intervals (e.g. 1m, 5m, 1d) for which the klines should be downloaded for
+    :param str indicators: optional; indicators, which should be added to the csv file
+    :param str indicators_config: optional; parameters for the indicators, if required
+    
+    :return: writes csv files with downloaded klines and technical indicators (one file for each provided symbol)
+    :rtype: csv file
 
-    TODO klines: avoid downloading klines for pairs which dont provide up-to-date data anymore (e.g. last entry is longer ago than 10 times the selected timeframe)
-    TODO klines: cleanup files, which dont have up-to-date data anymore
-    TODO adding technical indicators after downloading klines according to config file
+    This data can be used for backtesting (currently done in excel)
+
+    .. note:: Indicators are not yet implemented
+
+    Further information: description of headers for klines is documented here: https://python-binance.readthedocs.io/en/latest/binance.html?highlight=get_historical_klines_generator#module-binance.client
+
+    :TODO: klines: avoid downloading klines for pairs which dont provide up-to-date data anymore (e.g. last entry is longer ago than 10 times the selected timeframe)
+    :TODO: klines: cleanup files, which dont have up-to-date data anymore
+    :TODO: adding technical indicators after downloading klines according to config file
     """
-
     # internal variables
     klines = pd.DataFrame()
 
