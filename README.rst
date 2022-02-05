@@ -4,10 +4,10 @@ Welcome to binance-reporting v0.2.0
 
 Updated 05th Feb 2022
 
-This is an **unofficial** Python downloader for `Binance exchange REST API v3 <https://binance-docs.github.io/apidocs/spot/en>`_. I am in no way affiliated with Binance. You can use it at your own risk.
+This is an **unofficial** Python downloader for `Binance exchange via its API <https://binance-docs.github.io/apidocs>`_. I am in no way affiliated with Binance. You can use it at your own risk.
 
 If you came here looking for the `Binance exchange <https://www.binance.com/?ref=10099792>`_ to purchase cryptocurrencies, then `click here <https://accounts.binance.com/en/register?ref=CA3POK5P>`_.
-If you are having an account at Binance already and want to download all your trading information from Binance, you might find something useful below.
+If you are having an account at Binance already and want to download all your trading information from Binance, you ended up at the right place.
 
 Source code
   https://github.com/JanAbraham/python-binance-reporting
@@ -33,8 +33,9 @@ In addition to your own data, you can download general available data as well
   - prices of all trading pairs
   - kline history
 
-One common issue when downloading the data are api payloads. This is being taken care of.
-Depending on your trading history with Binance, the first download might take some time to complete.
+One common issue when downloading data are API overloads. When that happens the data stream will just stop and the other side will close the connection. This is being taken care of and cool-off times have been implemented as appropriate.
+
+Depending on your trading history with Binance, the first download might take some time to complete. Even more when you add kline downloads for many trading pairs and intervals. You can always watch the status of the download either on the console or in the log-file.
 Every download attempt is first checking for previous data downloads and only performs a differential download.
 
 Quick Start
@@ -75,7 +76,7 @@ Contribute
 ----------
 If you like to contribute or have an idea for improvements / enhancements, please contact me via github https://github.com/JanAbraham
   
-- `Source Code <https://github.com/JanAbraham/binance-reporting>`_
+  - `Source Code <https://github.com/JanAbraham/binance-reporting>`_
 
 Please be informed, that I am only working sporadically on this project. I apologize already for longer response times.
 
@@ -83,7 +84,7 @@ Please be informed, that I am only working sporadically on this project. I apolo
 Support
 -------
 If you are having issues, please open an item here:
-- `Issue Tracker <https://github.com/JanAbraham/binance-reporting/issues>`_
+  - `Issue Tracker <https://github.com/JanAbraham/binance-reporting/issues>`_
 
 Donate
 ------

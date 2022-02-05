@@ -18,7 +18,7 @@ Configuration
 ~~~~~~~~~~~~~
 - The script is controlled by a yaml config file. You can download a `Template of a config file <https://github.com/JanAbraham/binance-reporting/blob/main/configs/config_template.yaml>`_
 - Detailed information about how to use the configuration file is in the template and in this `chapter <https://binance-reporting.readthedocs.io/en/latest/config.html>`_.
-- The config file need to be in the same folder from where you start the python script.
+- The config file needs to be in the same folder from where you start the python script.
 
 Starting Data Download
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -28,9 +28,7 @@ Starting Data Download
 
       python -m binance_reporting.start config.yaml
 
-
-
-For more information, feel free to browse through the next chapters.
+**For more information, feel free to browse through the next chapters.**
 
 Contribute
 ----------
