@@ -1112,6 +1112,6 @@ def klines(dir, symbols, intervals, indicators, indicators_config):
             hlp.API_weight_check(client)
             logging.info("--- FINISHED --- " + str(pair) + " --- " + interval + " --- " + str(paircount) + " / " + str(len(symbols)) + " ---")
 
-    hlp.klines_merge(dir + '/1d/', dir, 'history_1d_klines_all_Assets.csv')
+    hlp.merge_klines(dir + '/1d/', dir, 'history_1d_klines_all_Assets.csv')
 
     logging.info("--- Finished --- binance kline downloading ---")

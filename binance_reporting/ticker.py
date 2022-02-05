@@ -1,3 +1,13 @@
+"""sending messages to telegram channels
+
+functions available for:
+    - sending balance and PnL for given accounts
+    - send summary msg of balances for group of accounts (e.g. all SPOT accounts or all FUTURES accounts etc.)
+
+TODO add function to ask ad-hoc account status
+TODO add function to send msg after every trade on given accounts
+"""
+
 import os
 import logging
 import telegram.ext     # sending balance information to telegram
@@ -7,9 +17,30 @@ except:
     from downloader import balances
 
 def send_bal(accounts, account_groups, telegram_token):
-    """ sending short balance status msg to telegram channels
-    """
+    """sending short balance status msg to telegram channels
 
+    **Goal**
+        - give regular updates about account balances and PnL via telegram
+
+    **Procedure**
+        - collect balances from account given by utilizing downloader.balances function
+        - calcuate cash, portfolio value and profit from given accounts
+        - send short messages to telegram channels as provided in the config file
+        - loop through account groups and send summary messages to telegram channel (if provided)
+
+        .. note:: Please make sure that the telegram token has access to the telegram channel and the telegram channel is public
+
+    :param accounts: required; provided as in config yaml file
+    :type accounts: dict
+
+    :param account_groups: required; provided as in config yaml file
+    :type accounts_groups: dict
+
+    :param telegram_token: required; token of telegram account, which will send the messages
+    :type telegram_token: string
+
+    :returns: account status messages in telegram channels
+    """
     logging.info(' - Sending balance tickers to telegram channels. -')
     for account in accounts:
 
@@ -35,26 +66,27 @@ def send_bal(accounts, account_groups, telegram_token):
 
     logging.info(' - Looping through different account groups and sending ticker messages to telegram for every group -')
 
-    for account_group in account_groups:
-        account_group = account_groups[account_group]
-        chat_id = account_group['chat_id']
-        chat_pseudo = account_group['chat_pseudo']
-        investment = 0
-        cash = 0
-        portval = 0
+    if len(account_groups) != 0:
+        for account_group in account_groups:
+            account_group = account_groups[account_group]
+            chat_id = account_group['chat_id']
+            chat_pseudo = account_group['chat_pseudo']
+            investment = 0
+            cash = 0
+            portval = 0
 
-        # get details for every account and sum them up
-        for account in account_group['accounts']:
-            account_details = accounts[account]
-            investment = investment + account_details['investment']
-            cash = cash + account_details['cash']
-            portval = portval + account_details['portval']
+            # get details for every account and sum them up
+            for account in account_group['accounts']:
+                account_details = accounts[account]
+                investment = investment + account_details['investment']
+                cash = cash + account_details['cash']
+                portval = portval + account_details['portval']
 
-        strCash = 'C=' + str(round(cash, 0))
-        strPortVal = 'B=' + str(round(portval, 0))
-        strProfit = 'P=' + str(round((portval - investment) / investment * 100, 1)) + '%'
+            strCash = 'C=' + str(round(cash, 0))
+            strPortVal = 'B=' + str(round(portval, 0))
+            strProfit = 'P=' + str(round((portval - investment) / investment * 100, 1)) + '%'
 
-        bot_text = (strCash + ' ' + strPortVal + ' ' + strProfit + ' ' + chat_pseudo).lower()
-        bot.send_message(chat_id = chat_id, text = bot_text)
+            bot_text = (strCash + ' ' + strPortVal + ' ' + strProfit + ' ' + chat_pseudo).lower()
+            bot.send_message(chat_id = chat_id, text = bot_text)
 
     logging.info(' - Finished sending Tickers to groups -')

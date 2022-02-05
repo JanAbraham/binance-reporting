@@ -1,13 +1,13 @@
 """helper modules for binance-reporting library
 
 **Modules available**
-    - read configuration file (yaml)
-    - get symbols from exchange
-    - API weight check and cool down if overheated
     - API close connection
+    - API weight check and cool down if overheated
     - removing blank lines in csv files
-    - merging multiple files into one file
+    - get symbols from exchange
     - merging all files in a directory into one file
+    - merging multiple files into one file
+    - read configuration file (yaml)
 """
 import os       # file & dir ops
 import time     # sleep for API cool-off
@@ -20,21 +20,15 @@ def read_config(args):
     """read config from a given file and convert it into a dictionary
     
     **Procedure**
-        - check if there was a config file given
-        - read the default config file into a dictionary
-        - read additional config file if provided as argument
-        - update default config with additional config
-        - change some path values in the dictionary
-        - give the dictionary back as a result
+        - read the default config hardcoded in the script
+        - read config from given file (provided as argument)
+        - update default config with config from file
+        - give the dictionary with config infos back as a result
 
-    :param config_file: required
-    :type config_file: str
-
-    :param args: required
+    :param args: required; 
     :type args: list
 
     :returns: dictionary with config info
-
     """
     logging.debug(' - Set default configuration. -')
 
@@ -119,7 +113,7 @@ def read_config(args):
 
 
 def get_symbols(patterns:list = ['']):
-    """get trading symbols from exchange which contain a given string (e.g. USDT)
+    """get available trading pairs from exchange which contain a given string (e.g. USDT)
 
     **Goal**
         - reduce the amount of trading pairs to walk through, e.g. when downloading historic trades
@@ -137,7 +131,6 @@ def get_symbols(patterns:list = ['']):
     :type pattern: str or list
 
     :returns: list of filtered trading pairs available on exchange
-
     """
 
     logging.debug("get list of Trading Pairs to download data about ...")
@@ -170,7 +163,7 @@ def get_symbols(patterns:list = ['']):
 
 
 def API_weight_check(client):
-    """verify current payload of Binance API and trigger cool-off
+    """verify current payload of Binance API and trigger cool-off if 75% of max payload is reached
 
     **Goal**
         - Avoiding errors while downloading data from binance.
@@ -271,15 +264,15 @@ def file_remove_blanks(filename):
     """read csv file and remove blank lines
     
     **Goal**
-        - Sometimes there are blank lines added to csv files when writing them in Windows.
+        - Sometimes there are blank lines added to csv files when writing them in Windows. This function removes them.
 
     **Procedure**
         - load provided file into panda dataframe
         - dropping all empty rows from the dataframe
         - writing file back
 
-    :param filename: required
-    :type filename: str with complete absolute path to file
+    :param filename: required; must include the complete absolute path to the file
+    :type filename: str
 
     :returns: written csv file without empty rows
     """
@@ -290,21 +283,60 @@ def file_remove_blanks(filename):
     logging.info(" - blank rows removed from %s", filename)
 
 
-def merge_files(sourcefiles: list, targetfile: str):
+def merge_files(files_src: list, file_trgt: str):
+    """merging all given files into one file
+
+    **Goal**
+        - creating one file with all records from different files for better usage in excel pivot tables
+        - used to combine account information from different accounts into one file
+        - being used for balances, withdrawals, deposits, snapshots
+
+    **Procedure**
+        - get a list of source files
+        - loop through all files and append to target file
+
+    :param files_src: required; list of files, which should be merged
+    :type files_src: list
+
+    :param file_trgt: required; provides filename for merged csv file
+    :type file_trgt: str
+
+    :returns: csv file with all the merged info
+    """
+
     data = pd.DataFrame()
     data_new = pd.DataFrame()
-    for sourcefile in sourcefiles:
-        if os.path.isfile(sourcefile):
-            data_new = pd.read_csv(sourcefile)
+    for file_src in files_src:
+        if os.path.isfile(file_src):
+            data_new = pd.read_csv(file_src)
             data = pd.concat([data, data_new])
             #data = data.append(data_new, ignore_index=True)
-    data.to_csv(targetfile, index=False)
+    data.to_csv(file_trgt, index=False)
 
 
-def klines_merge(klines_dir_src : str, klines_dir_trgt : str, filename_trgt : str):
+def merge_klines(klines_dir_src : str, klines_dir_trgt : str, filename_trgt : str):
     """merging all klines files of a given directory into one file
-    
+
+    **Goal**
+        - creating one file with all the klines of all trading-pairs for better usage in excel pivot tables
+        - only being done for '1d' timeframes
+
+    **Procedure**
+        - get the source directory with all the kline csv files
+        - loop through all files and append to target filename
+
+    :param klines_dir_src: required; provides complete path to source directory with all klines csv files
+    :type klines_dir_src: str
+
+    :param klines_dir_trgt: required; provides complete path to target directory for the merged csv files
+    :type klines_dir_trgt: str
+
+    :param filename_trgt: required; provides filename for merged csv file
+    :type filename_trgt: str
+
+    :returns: csv file with all the merged klines
     """
+
     logging.info("--- START --- Merging klines into one file ---")
 
     files = os.listdir(klines_dir_src)
