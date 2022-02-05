@@ -1031,8 +1031,7 @@ def klines(dir, symbols, intervals, indicators, indicators_config):
         - create new file for all data from 1d kline interval for use in excel
 
     further information:
-        - description of header for klines is documented 
-        here: https://python-binance.readthedocs.io/en/latest/binance.html?highlight=get_historical_klines_generator#module-binance.client
+        - description of header for klines is documented here: https://python-binance.readthedocs.io/en/latest/binance.html?highlight=get_historical_klines_generator#module-binance.client
 
     TODO klines: avoid downloading klines for pairs which dont provide up-to-date data anymore (e.g. last entry is longer ago than 10 times the selected timeframe)
     TODO klines: cleanup files, which dont have up-to-date data anymore
