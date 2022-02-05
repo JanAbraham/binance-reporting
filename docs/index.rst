@@ -13,8 +13,6 @@ Contents
 
    overview
    config
-   accountdata
-   marketdata
    modules
    faq
    changelog
@@ -27,20 +25,17 @@ Index
 
 Contribute
 ----------
-
 If you like to contribute or have an idea for improvements / enhancements, please contact me via github https://github.com/JanAbraham
   
-  - Source Code: https://github.com/JanAbraham/python-binance-reporting
+- `Source Code <https://github.com/JanAbraham/binance-reporting>`_
 
 Please be informed, that I am only working sporadically on this project. I apologize already for longer response times.
 
 Support
 -------
-
 If you are having issues, please open an item here:
-  - Issue Tracker: https://github.com/JanAbraham/python-binance-reporting/issues
+- `Issue Tracker <https://github.com/JanAbraham/binance-reporting/issues>`_
 
 License
 -------
-
 The project is licensed under GNU General Public License.
