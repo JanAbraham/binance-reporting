@@ -163,3 +163,4 @@ configs/*
 !config_template.yaml
 config_new/
 config/
+config_default.yaml
